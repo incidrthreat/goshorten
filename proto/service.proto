@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service Shortener {
+    rpc GetURL(URLRequest) returns (URLResponse);
+}
+
+message URLRequest {
+    string url = 1;
+}
+
+message URLResponse {
+    string shortened = 1;
+}
