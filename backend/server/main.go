@@ -1,9 +1,9 @@
 package main
 
 import (
-	_ proto "github.com/incidrthreat/goshorten/proto/url_service"
+	_ "github.com/incidrthreat/goshorten/protos/url_service"
 )
 
 func main() {
-	proto
+	//proto
 }
