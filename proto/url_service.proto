@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option go_package = ".;url_service";
+
 service Shortener {
     rpc GetURL(URLRequest) returns (URLResponse);
 }
