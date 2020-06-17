@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.21.0-devel
 // 	protoc        v3.11.4
-// source: url_service.proto
+// source: pb/url_service.proto
 
 package url_service
 
@@ -40,7 +40,7 @@ type URLRequest struct {
 func (x *URLRequest) Reset() {
 	*x = URLRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_url_service_proto_msgTypes[0]
+		mi := &file_pb_url_service_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -53,7 +53,7 @@ func (x *URLRequest) String() string {
 func (*URLRequest) ProtoMessage() {}
 
 func (x *URLRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_url_service_proto_msgTypes[0]
+	mi := &file_pb_url_service_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -66,7 +66,7 @@ func (x *URLRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use URLRequest.ProtoReflect.Descriptor instead.
 func (*URLRequest) Descriptor() ([]byte, []int) {
-	return file_url_service_proto_rawDescGZIP(), []int{0}
+	return file_pb_url_service_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *URLRequest) GetUrl() string {
@@ -87,7 +87,7 @@ type URLResponse struct {
 func (x *URLResponse) Reset() {
 	*x = URLResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_url_service_proto_msgTypes[1]
+		mi := &file_pb_url_service_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -100,7 +100,7 @@ func (x *URLResponse) String() string {
 func (*URLResponse) ProtoMessage() {}
 
 func (x *URLResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_url_service_proto_msgTypes[1]
+	mi := &file_pb_url_service_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -113,7 +113,7 @@ func (x *URLResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use URLResponse.ProtoReflect.Descriptor instead.
 func (*URLResponse) Descriptor() ([]byte, []int) {
-	return file_url_service_proto_rawDescGZIP(), []int{1}
+	return file_pb_url_service_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *URLResponse) GetShortened() string {
@@ -123,40 +123,40 @@ func (x *URLResponse) GetShortened() string {
 	return ""
 }
 
-var File_url_service_proto protoreflect.FileDescriptor
+var File_pb_url_service_proto protoreflect.FileDescriptor
 
-var file_url_service_proto_rawDesc = []byte{
-	0x0a, 0x11, 0x75, 0x72, 0x6c, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x1e, 0x0a, 0x0a, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
-	0x75, 0x72, 0x6c, 0x22, 0x2b, 0x0a, 0x0b, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x68, 0x6f, 0x72, 0x74, 0x65, 0x6e, 0x65, 0x64, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x68, 0x6f, 0x72, 0x74, 0x65, 0x6e, 0x65, 0x64,
-	0x32, 0x30, 0x0a, 0x09, 0x53, 0x68, 0x6f, 0x72, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x12, 0x23, 0x0a,
-	0x06, 0x47, 0x65, 0x74, 0x55, 0x52, 0x4c, 0x12, 0x0b, 0x2e, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x42, 0x0f, 0x5a, 0x0d, 0x2e, 0x3b, 0x75, 0x72, 0x6c, 0x5f, 0x73, 0x65, 0x72, 0x76,
-	0x69, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_pb_url_service_proto_rawDesc = []byte{
+	0x0a, 0x14, 0x70, 0x62, 0x2f, 0x75, 0x72, 0x6c, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x1e, 0x0a, 0x0a, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x22, 0x2b, 0x0a, 0x0b, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x68, 0x6f, 0x72, 0x74, 0x65, 0x6e,
+	0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x68, 0x6f, 0x72, 0x74, 0x65,
+	0x6e, 0x65, 0x64, 0x32, 0x30, 0x0a, 0x09, 0x53, 0x68, 0x6f, 0x72, 0x74, 0x65, 0x6e, 0x65, 0x72,
+	0x12, 0x23, 0x0a, 0x06, 0x47, 0x65, 0x74, 0x55, 0x52, 0x4c, 0x12, 0x0b, 0x2e, 0x55, 0x52, 0x4c,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0f, 0x5a, 0x0d, 0x2e, 0x3b, 0x75, 0x72, 0x6c, 0x5f, 0x73,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_url_service_proto_rawDescOnce sync.Once
-	file_url_service_proto_rawDescData = file_url_service_proto_rawDesc
+	file_pb_url_service_proto_rawDescOnce sync.Once
+	file_pb_url_service_proto_rawDescData = file_pb_url_service_proto_rawDesc
 )
 
-func file_url_service_proto_rawDescGZIP() []byte {
-	file_url_service_proto_rawDescOnce.Do(func() {
-		file_url_service_proto_rawDescData = protoimpl.X.CompressGZIP(file_url_service_proto_rawDescData)
+func file_pb_url_service_proto_rawDescGZIP() []byte {
+	file_pb_url_service_proto_rawDescOnce.Do(func() {
+		file_pb_url_service_proto_rawDescData = protoimpl.X.CompressGZIP(file_pb_url_service_proto_rawDescData)
 	})
-	return file_url_service_proto_rawDescData
+	return file_pb_url_service_proto_rawDescData
 }
 
-var file_url_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_url_service_proto_goTypes = []interface{}{
+var file_pb_url_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_pb_url_service_proto_goTypes = []interface{}{
 	(*URLRequest)(nil),  // 0: URLRequest
 	(*URLResponse)(nil), // 1: URLResponse
 }
-var file_url_service_proto_depIdxs = []int32{
+var file_pb_url_service_proto_depIdxs = []int32{
 	0, // 0: Shortener.GetURL:input_type -> URLRequest
 	1, // 1: Shortener.GetURL:output_type -> URLResponse
 	1, // [1:2] is the sub-list for method output_type
@@ -166,13 +166,13 @@ var file_url_service_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_url_service_proto_init() }
-func file_url_service_proto_init() {
-	if File_url_service_proto != nil {
+func init() { file_pb_url_service_proto_init() }
+func file_pb_url_service_proto_init() {
+	if File_pb_url_service_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_url_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_pb_url_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*URLRequest); i {
 			case 0:
 				return &v.state
@@ -184,7 +184,7 @@ func file_url_service_proto_init() {
 				return nil
 			}
 		}
-		file_url_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_pb_url_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*URLResponse); i {
 			case 0:
 				return &v.state
@@ -201,20 +201,20 @@ func file_url_service_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_url_service_proto_rawDesc,
+			RawDescriptor: file_pb_url_service_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_url_service_proto_goTypes,
-		DependencyIndexes: file_url_service_proto_depIdxs,
-		MessageInfos:      file_url_service_proto_msgTypes,
+		GoTypes:           file_pb_url_service_proto_goTypes,
+		DependencyIndexes: file_pb_url_service_proto_depIdxs,
+		MessageInfos:      file_pb_url_service_proto_msgTypes,
 	}.Build()
-	File_url_service_proto = out.File
-	file_url_service_proto_rawDesc = nil
-	file_url_service_proto_goTypes = nil
-	file_url_service_proto_depIdxs = nil
+	File_pb_url_service_proto = out.File
+	file_pb_url_service_proto_rawDesc = nil
+	file_pb_url_service_proto_goTypes = nil
+	file_pb_url_service_proto_depIdxs = nil
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -294,5 +294,5 @@ var _Shortener_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "url_service.proto",
+	Metadata: "pb/url_service.proto",
 }
