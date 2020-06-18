@@ -1,0 +1,20 @@
+/* 
+GetURL will take in a long url, generate a 6 character code to associate with the URL
+and store it in a redis datastore for XX amount of time. (length of time undetermined)
+*/
+
+syntax = "proto3";
+
+option go_package = ".;url_service";
+
+service Shortener {
+    rpc CreateURL(ShortURLReq) returns (ShortURLResp);
+}
+
+message ShortURLReq {
+    string long_url = 1;
+}
+
+message ShortURLResp {
+    string short_url = 1;
+}
