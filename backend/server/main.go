@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"net"
 	"os"
 
@@ -9,27 +8,10 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/incidrthreat/goshorten/backend/server/config"
-	"github.com/incidrthreat/goshorten/backend/server/data"
+	"github.com/incidrthreat/goshorten/backend/server/shortener"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
-
-type server struct{}
-
-var log = hclog.Default()
-
-func (*server) GetURL(ctx context.Context, req *pb.URLRequest) (*pb.URLResponse, error) {
-	//longURL := req.Url
-
-	//log.Info("Request made:", longURL)
-
-	code := data.GenCode(6)
-
-	resp := &pb.URLResponse{
-		Shortened: code,
-	}
-	return resp, nil
-}
 
 func main() {
 
@@ -51,7 +33,7 @@ func main() {
 	gs := grpc.NewServer()
 	reflection.Register(gs)
 
-	pb.RegisterShortenerServer(gs, &server{})
+	pb.RegisterShortenerServer(gs, &shortener.Server{})
 
 	gs.Serve(lis)
 

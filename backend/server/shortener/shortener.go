@@ -2,20 +2,30 @@ package shortener
 
 import (
 	"context"
+	"fmt"
+
+	pb "github.com/incidrthreat/goshorten/pb/shortener"
 
 	"github.com/hashicorp/go-hclog"
-	pb "github.com/incidrthreat/goshorten/pb/shortener"
+	"github.com/incidrthreat/goshorten/backend/server/data"
 )
 
-type Shortener struct {
-	long_url string
-	log      hclog.Logger
-}
+type Server struct{}
 
-func NewURL(lurl string, l hclog.Logger) *Shortener {
-	return &Shortener{lurl, l}
-}
+var log = hclog.Default()
 
-func (s *Shortener) GetURL(ctx context.Context, ur *pb.URLRequest) (*pb.URLResponse, error) {
-	return nil, nil
+func (*Server) GetURL(ctx context.Context, req *pb.URLRequest) (*pb.URLResponse, error) {
+	if req.Url == "" {
+		log.Error("No URL Reqested")
+	} else {
+		fmt.Printf("URL: %s", req.Url)
+		code := data.GenCode(6)
+
+		resp := &pb.URLResponse{
+			Shortened: "bit.ly/" + code,
+		}
+		return resp, nil
+	}
+
+	return &pb.URLResponse{}, nil
 }
