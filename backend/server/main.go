@@ -4,7 +4,7 @@ import (
 	"net"
 	"os"
 
-	pb "github.com/incidrthreat/goshorten/pb/shortener"
+	pb "github.com/incidrthreat/goshorten/backend/server/pb"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/incidrthreat/goshorten/backend/server/config"

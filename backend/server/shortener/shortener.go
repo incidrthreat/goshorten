@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/incidrthreat/goshorten/pb/shortener"
+	pb "github.com/incidrthreat/goshorten/backend/server/pb"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/incidrthreat/goshorten/backend/server/data"
@@ -14,18 +14,18 @@ type Server struct{}
 
 var log = hclog.Default()
 
-func (*Server) GetURL(ctx context.Context, req *pb.URLRequest) (*pb.URLResponse, error) {
-	if req.Url == "" {
+func (*Server) CreateURL(ctx context.Context, req *pb.ShortURLReq) (*pb.ShortURLResp, error) {
+	if req.LongUrl == "" {
 		log.Error("No URL Reqested")
 	} else {
-		fmt.Printf("URL: %s", req.Url)
+		fmt.Printf("URL: %s", req.LongUrl)
 		code := data.GenCode(6)
 
-		resp := &pb.URLResponse{
-			Shortened: "bit.ly/" + code,
+		resp := &pb.ShortURLResp{
+			ShortUrl: "bit.ly/" + code,
 		}
 		return resp, nil
 	}
 
-	return &pb.URLResponse{}, nil
+	return &pb.ShortURLResp{}, nil
 }
