@@ -11,7 +11,9 @@ services:
 
     redis:
         image: "redis:alpine"
-        command: redis-server --requirepass P@ssw0rd
+        command: redis-server
+        environment: 
+            - ALLOW_EMPTY_PASSWORD=yes 
         networks: 
             - backend
 
