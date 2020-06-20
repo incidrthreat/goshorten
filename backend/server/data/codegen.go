@@ -6,13 +6,6 @@ import (
 	"time"
 )
 
-// RedisStore defines the interface for storages to implement. Any store that is
-// implemented must conform this.
-type RedisStore interface {
-	Save(string) (string, error)
-	Load(string) (string, error)
-}
-
 // ErrNotFound is returned when a url can't be found with a given code.
 var ErrNotFound = errors.New("URL not found")
 
