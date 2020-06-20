@@ -1,11 +1,10 @@
 {
-    "listen_interface":"localhost:8080",
     "redis_conf":{
-        "host":"localhost:6379",
+        "host":"redis:6379",
         "pass":"P@ssword",
         "logical_database":0,
         "char_floor":3
     },
     "base_url":"google.com",
-    "grpc_host": "0.0.0.0:9000"
+    "grpc_host": ":9000"
 }
