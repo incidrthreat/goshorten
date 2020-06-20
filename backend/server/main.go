@@ -6,11 +6,11 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/incidrthreat/goshorten/backend/server/data"
-	pb "github.com/incidrthreat/goshorten/backend/server/protos"
+	pb "github.com/incidrthreat/goshorten/protos"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/incidrthreat/goshorten/backend/server/config"
 	"github.com/incidrthreat/goshorten/backend/server/shortener"
+	"github.com/incidrthreat/goshorten/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
