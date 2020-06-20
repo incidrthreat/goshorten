@@ -1,13 +1,9 @@
 package data
 
 import (
-	"errors"
 	"math/rand"
 	"time"
 )
-
-// ErrNotFound is returned when a url can't be found with a given code.
-var ErrNotFound = errors.New("URL not found")
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 

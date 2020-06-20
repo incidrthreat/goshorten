@@ -40,7 +40,7 @@ func (r *Redis) Init() {
 // Save saves data to redis
 func (r *Redis) Save(url string) (string, error) {
 	// discover returns a uniqe code doesnt exist
-	code, err := discover(r.Client, r.CharFloor)
+	code, err := generate(r.Client, r.CharFloor)
 	if err != nil {
 		return "", err
 	}
@@ -52,7 +52,7 @@ func (r *Redis) Save(url string) (string, error) {
 	return code, nil
 }
 
-// Load grabs data from redis TODO
+// Load grabs data from redis
 func (r Redis) Load(code string) (string, error) {
 	fullURL, err := r.Client.Do("get", code).String()
 
@@ -67,10 +67,10 @@ func (r Redis) Load(code string) (string, error) {
 	return fullURL, nil
 }
 
-// set inserts the code and url key:value
+// set inserts the code:url as key:value
 func set(c *redis.Client, code string, fullURL string) error {
 	/* Sets the code as the key and the url as the value with a TTL of 60 seconds.  Default
-	will be	172800 Seconds == 48 hrs in production. */
+	will be	172800 Seconds (48 hrs) in production. */
 	if err := c.Set(fullURL, code, time.Duration(60*time.Second)).Err(); err != nil {
 		return err
 	}
@@ -78,8 +78,8 @@ func set(c *redis.Client, code string, fullURL string) error {
 	return nil
 }
 
-// discover generates a unqiue code and checks if valid
-func discover(c *redis.Client, n int) (string, error) {
+// generates a unqiue code and checks if valid
+func generate(c *redis.Client, n int) (string, error) {
 	code := GenCode(n)
 	exists := c.Exists(code).Val()
 
@@ -88,5 +88,5 @@ func discover(c *redis.Client, n int) (string, error) {
 	}
 
 	log.Info("Redis Discover:", "Key Collision", "Generating new code")
-	return discover(c, n+1)
+	return generate(c, n+1)
 }
