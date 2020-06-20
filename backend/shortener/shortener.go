@@ -3,10 +3,10 @@ package shortener
 import (
 	"context"
 
-	pb "github.com/incidrthreat/goshorten/protos"
+	pb "github.com/incidrthreat/goshorten/backend/pb"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/incidrthreat/goshorten/backend/server/data"
+	"github.com/incidrthreat/goshorten/backend/data"
 )
 
 // CreateServer holds the redis store data

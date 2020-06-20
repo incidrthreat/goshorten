@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/go-redis/redis"
-	"github.com/incidrthreat/goshorten/backend/server/data"
-	pb "github.com/incidrthreat/goshorten/protos"
+	"github.com/incidrthreat/goshorten/backend/data"
+	pb "github.com/incidrthreat/goshorten/backend/pb"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/incidrthreat/goshorten/backend/server/shortener"
-	"github.com/incidrthreat/goshorten/config"
+	"github.com/incidrthreat/goshorten/backend/config"
+	"github.com/incidrthreat/goshorten/backend/shortener"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
