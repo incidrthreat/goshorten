@@ -68,52 +68,132 @@ proto.ShortenerPromiseClient =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
- *   !proto.URLRequest,
- *   !proto.URLResponse>}
+ *   !proto.ShortURLReq,
+ *   !proto.ShortURLResp>}
  */
-const methodDescriptor_Shortener_GetURL = new grpc.web.MethodDescriptor(
-  '/Shortener/GetURL',
+const methodDescriptor_Shortener_CreateURL = new grpc.web.MethodDescriptor(
+  '/Shortener/CreateURL',
   grpc.web.MethodType.UNARY,
-  proto.URLRequest,
-  proto.URLResponse,
+  proto.ShortURLReq,
+  proto.ShortURLResp,
   /**
-   * @param {!proto.URLRequest} request
+   * @param {!proto.ShortURLReq} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.URLResponse.deserializeBinary
+  proto.ShortURLResp.deserializeBinary
 );
 
 
 /**
  * @const
  * @type {!grpc.web.AbstractClientBase.MethodInfo<
- *   !proto.URLRequest,
- *   !proto.URLResponse>}
+ *   !proto.ShortURLReq,
+ *   !proto.ShortURLResp>}
  */
-const methodInfo_Shortener_GetURL = new grpc.web.AbstractClientBase.MethodInfo(
-  proto.URLResponse,
+const methodInfo_Shortener_CreateURL = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.ShortURLResp,
   /**
-   * @param {!proto.URLRequest} request
+   * @param {!proto.ShortURLReq} request
    * @return {!Uint8Array}
    */
   function(request) {
     return request.serializeBinary();
   },
-  proto.URLResponse.deserializeBinary
+  proto.ShortURLResp.deserializeBinary
 );
 
 
 /**
- * @param {!proto.URLRequest} request The
+ * @param {!proto.ShortURLReq} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @param {function(?grpc.web.Error, ?proto.URLResponse)}
+ * @param {function(?grpc.web.Error, ?proto.ShortURLResp)}
  *     callback The callback function(error, response)
- * @return {!grpc.web.ClientReadableStream<!proto.URLResponse>|undefined}
+ * @return {!grpc.web.ClientReadableStream<!proto.ShortURLResp>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.ShortenerClient.prototype.createURL =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/Shortener/CreateURL',
+      request,
+      metadata || {},
+      methodDescriptor_Shortener_CreateURL,
+      callback);
+};
+
+
+/**
+ * @param {!proto.ShortURLReq} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.ShortURLResp>}
+ *     A native promise that resolves to the response
+ */
+proto.ShortenerPromiseClient.prototype.createURL =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/Shortener/CreateURL',
+      request,
+      metadata || {},
+      methodDescriptor_Shortener_CreateURL);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
+ *   !proto.URLReq,
+ *   !proto.URLResp>}
+ */
+const methodDescriptor_Shortener_GetURL = new grpc.web.MethodDescriptor(
+  '/Shortener/GetURL',
+  grpc.web.MethodType.UNARY,
+  proto.URLReq,
+  proto.URLResp,
+  /**
+   * @param {!proto.URLReq} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.URLResp.deserializeBinary
+);
+
+
+/**
+ * @const
+ * @type {!grpc.web.AbstractClientBase.MethodInfo<
+ *   !proto.URLReq,
+ *   !proto.URLResp>}
+ */
+const methodInfo_Shortener_GetURL = new grpc.web.AbstractClientBase.MethodInfo(
+  proto.URLResp,
+  /**
+   * @param {!proto.URLReq} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.URLResp.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.URLReq} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.Error, ?proto.URLResp)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.URLResp>|undefined}
  *     The XHR Node Readable Stream
  */
 proto.ShortenerClient.prototype.getURL =
@@ -128,11 +208,11 @@ proto.ShortenerClient.prototype.getURL =
 
 
 /**
- * @param {!proto.URLRequest} request The
+ * @param {!proto.URLReq} request The
  *     request proto
  * @param {?Object<string, string>} metadata User defined
  *     call metadata
- * @return {!Promise<!proto.URLResponse>}
+ * @return {!Promise<!proto.URLResp>}
  *     A native promise that resolves to the response
  */
 proto.ShortenerPromiseClient.prototype.getURL =

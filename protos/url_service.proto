@@ -1,20 +1,32 @@
 /* 
-GetURL will take in a long url, generate a 6 character code to associate with the URL
-and store it in a redis datastore for XX amount of time. (length of time undetermined)
+CreateURL will take in a long url, generate a 6 character code to associate with the URL
+and store it in a redis datastore for XX amount of time. (length of time undetermined) and 
+return a shortened URL
+
+GetURL will take in a code and return/redirect users to the long URL, if still active.
 */
 
 syntax = "proto3";
 
-option go_package = ".;url_service";
+option go_package = "protos";
 
 service Shortener {
     rpc CreateURL(ShortURLReq) returns (ShortURLResp);
+    rpc GetURL(URLReq) returns (URLResp);
 }
 
 message ShortURLReq {
-    string long_url = 1;
+    string LongUrl = 1;
 }
 
 message ShortURLResp {
-    string short_url = 1;
+    string ShortUrl = 1;
+}
+
+message URLReq {
+    string UrlCode = 1;
+}
+
+message URLResp {
+    string RedirectUrl = 1;
 }
