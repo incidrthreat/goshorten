@@ -1,12 +1,21 @@
 package data
 
 import (
-	"log"
+	"errors"
+	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/hashicorp/go-hclog"
 )
 
-const prefix = "shorty"
+// RedisStore defines the interface for storages to implement. Any store that is
+// implemented must conform this.
+type RedisStore interface {
+	Save(string) (string, error)
+	Load(string) (string, error)
+}
+
+var log = hclog.Default()
 
 // Redis data struct
 type Redis struct {
@@ -21,16 +30,63 @@ func (r *Redis) Init() {
 	_, err := r.Client.Ping().Result()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Error("Error", "Server Ping Failed", err)
+	} else {
+		log.Info("Redis Server", "Connection", "Online")
 	}
+
 }
 
-// Set saves data to redis
-func (r Redis) Set(url string) (string, error) {
-	return "", nil
+// Save saves data to redis
+func (r *Redis) Save(url string) (string, error) {
+	// discover returns a uniqe code doesnt exist
+	code, err := discover(r.Client, r.CharFloor)
+	if err != nil {
+		return "", err
+	}
+	err = set(r.Client, url, code)
+	if err != nil {
+		return "", err
+	}
+	log.Info("Redis Save", "Code stored", hclog.Fmt("Code: %s URL: %s", code, url))
+	return code, nil
 }
 
-// Get loads data from redis
-func (r Redis) Get(code string) (string, error) {
-	return "", nil
+// Load grabs data from redis TODO
+func (r Redis) Load(code string) (string, error) {
+	fullURL, err := r.Client.Do("get", code).String()
+
+	if err == redis.Nil {
+		return "", errors.New("Code not found")
+	} else if err != nil {
+		log.Error("Redis Load", "Error", err)
+		return "", err
+	}
+
+	log.Info("Redis Load", "URL retrieved", hclog.Fmt("%s", fullURL))
+	return fullURL, nil
+}
+
+// set inserts the code and url key:value
+func set(c *redis.Client, code string, fullURL string) error {
+	// Sets the code as the key and the url as the value for 48 hrs
+	// if err := c.Set(fullURL, code, time.Duration(172800*time.Second)).Err(); err != nil {
+	if err := c.Set(fullURL, code, time.Duration(60*time.Second)).Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// discover generates a unqiue code and checks if valid
+func discover(c *redis.Client, n int) (string, error) {
+	code := GenCode(n)
+	exists := c.Exists(code).Val()
+
+	if exists == 0 {
+		return code, nil
+	}
+
+	log.Info("Redis Discover:", "Key Collision", "Generating new code")
+	return discover(c, n+1)
 }
