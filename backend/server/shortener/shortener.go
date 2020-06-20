@@ -3,12 +3,13 @@ package shortener
 import (
 	"context"
 
-	pb "github.com/incidrthreat/goshorten/backend/server/protos"
+	pb "github.com/incidrthreat/goshorten/protos"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/incidrthreat/goshorten/backend/server/data"
 )
 
+// CreateServer holds the redis store data
 type CreateServer struct {
 	Store data.Redis
 }
