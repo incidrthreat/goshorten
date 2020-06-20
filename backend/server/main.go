@@ -4,7 +4,9 @@ import (
 	"net"
 	"os"
 
-	pb "github.com/incidrthreat/goshorten/backend/server/pb"
+	"github.com/go-redis/redis"
+	"github.com/incidrthreat/goshorten/backend/server/data"
+	pb "github.com/incidrthreat/goshorten/backend/server/protos"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/incidrthreat/goshorten/backend/server/config"
@@ -14,7 +16,6 @@ import (
 )
 
 func main() {
-
 	log := hclog.Default()
 	conf, err := config.ConfigFromFile("config.json")
 	if err != nil {
@@ -22,18 +23,31 @@ func main() {
 		os.Exit(1)
 	}
 
+	store := data.Redis{
+		CharFloor: conf.Redis.CharFloor,
+		Conn: &redis.Options{
+			Addr:     conf.Redis.Host,
+			Password: conf.Redis.Pass,
+			DB:       conf.Redis.DB,
+		},
+	}
+
+	store.Init()
+
 	lis, err := net.Listen("tcp", conf.GRPCHost)
 	if err != nil {
 		log.Error("Unable to create listener", "error", err)
 		os.Exit(1)
 	}
 
-	log.Info("Server staring", "addr:port", hclog.Fmt("listening on %v ...", conf.GRPCHost))
+	log.Info("Server listening on", "Host:Port", hclog.Fmt("%v", conf.GRPCHost))
 
 	gs := grpc.NewServer()
-	reflection.Register(gs)
+	reflection.Register(gs) // Remove before production
 
-	pb.RegisterShortenerServer(gs, &shortener.Server{})
+	pb.RegisterShortenerServer(gs, &shortener.CreateServer{
+		Store: store,
+	})
 
 	gs.Serve(lis)
 
