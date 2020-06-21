@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "google-protobuf": "^3.12.2",
+    "grpc-web": "^1.1.0",
     "navigo": "^7.1.2"
   }
 }
