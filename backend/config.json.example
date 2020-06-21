@@ -1,4 +1,5 @@
 {
+    "proxy_addr":":8080",
     "redis_conf":{
         "host":"redis:6379",
         "pass":"P@ssword",
