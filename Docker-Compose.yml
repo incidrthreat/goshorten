@@ -4,6 +4,7 @@ services:
         build: backend/.
         ports: 
             - "9000:9000"
+            - "8080:8080"
         networks:
             - backend
         links: 

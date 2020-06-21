@@ -3,5 +3,5 @@ RUN mkdir /app
 WORKDIR /app/
 COPY . /app/
 RUN go build -o grpc-server .
-EXPOSE 9000
+EXPOSE 9000 8080
 CMD ["./grpc-server"]

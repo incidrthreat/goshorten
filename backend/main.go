@@ -54,13 +54,13 @@ func main() {
 	})
 
 	go func() {
-		log.Fatal("Serving gRPC: ", gs.Serve(lis).Error())
+		log.Info("Serving gRPC: ", gs.Serve(lis).Error())
 	}()
 
 	grpcWebServer := grpcweb.WrapServer(gs)
 
 	httpServer := &http.Server{
-		Addr: conf.ProxyAddr,
+		Addr: conf.GRPCProxyAddr,
 		Handler: h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.ProtoMajor == 2 {
 				grpcWebServer.ServeHTTP(w, r)
@@ -76,6 +76,6 @@ func main() {
 			}
 		}), &http2.Server{}),
 	}
-	log.Fatal("Serving Proxy: ", httpServer.ListenAndServe().Error())
+	log.Info("Serving Proxy: ", httpServer.ListenAndServe().Error())
 
 }
