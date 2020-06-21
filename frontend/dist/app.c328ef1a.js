@@ -3597,8 +3597,8 @@ var _url_service_grpc_web_pb = require("./pb/url_service_grpc_web_pb");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-console.log(_url_service_grpc_web_pb.ShortenerClient);
 var router = new _navigo.default();
+console.log(_url_service_grpc_web_pb.CreatURL);
 router.on("/", function () {
   document.body.innerHTML = "Home";
 }).resolve();
@@ -3630,7 +3630,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53663" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56245" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
