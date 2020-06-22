@@ -6,6 +6,5 @@
         "logical_database":0,
         "char_floor":3
     },
-    "base_url":"google.com",
     "grpc_host": ":9000"
 }
