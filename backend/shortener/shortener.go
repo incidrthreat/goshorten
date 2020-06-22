@@ -33,7 +33,7 @@ func (c *CreateServer) CreateURL(ctx context.Context, req *pb.ShortURLReq) (*pb.
 	}
 
 	resp := &pb.ShortURLResp{
-		ShortUrl: "bit.ly/" + code,
+		ShortUrl: code,
 	}
 	return resp, nil
 
