@@ -1,4 +1,8 @@
+# Backend ignore
 config.json
+
+# Frontend ignore
 frontend/.cache
 frontend/node_modules
 frontend/dist
+package-lock.json
