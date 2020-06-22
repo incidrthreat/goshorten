@@ -1,12 +1,18 @@
-import Navigo from "navigo"
-import { ShortenerClient } from "./pb/url_service_grpc_web_pb"
+import Navigo from 'navigo'
 
-console.log(ShortenerClient)
+import { Home } from './views/home'
+import { GetUrl } from './views/geturl'
+
+import { ShortenerClient, ShortURLReq } from './pb/url_service_grpc_web_pb'
+
+const shortClient = new ShortenerClient('http://localhost:8080', null, null)
 
 const router = new Navigo()
 
+
 router
-    .on("/", function() {
-        document.body.innerHTML = "Home"
-    })
+    .on("/", Home)
+    .on("/:code", GetUrl)
     .resolve()
+
+export { router, shortClient }
