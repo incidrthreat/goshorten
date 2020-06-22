@@ -5,7 +5,7 @@ import { GetUrl } from './views/geturl'
 
 import { ShortenerClient, ShortURLReq } from './pb/url_service_grpc_web_pb'
 
-const shortClient = new ShortenerClient('http://localhost:8080', null, null)
+const shortClient = new ShortenerClient('http://grpcbackend:8080', null, null)
 
 const router = new Navigo()
 
