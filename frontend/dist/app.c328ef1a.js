@@ -3588,21 +3588,101 @@ proto.ShortenerPromiseClient.prototype.getURL = function (request, metadata) {
 };
 
 module.exports = proto;
-},{"grpc-web":"node_modules/grpc-web/index.js","./url_service_pb.js":"pb/url_service_pb.js"}],"app.js":[function(require,module,exports) {
+},{"grpc-web":"node_modules/grpc-web/index.js","./url_service_pb.js":"pb/url_service_pb.js"}],"views/home.js":[function(require,module,exports) {
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Home = Home;
+
+var _app = require("../app");
+
+var _url_service_grpc_web_pb = require("../pb/url_service_grpc_web_pb");
+
+function Home() {
+  document.body.innerHTML = "";
+  var homeDiv = document.createElement('div');
+  homeDiv.classList.add('home-div');
+  var urlLabel = document.createElement('h1');
+  urlLabel.innerText = "URL Shortener";
+  homeDiv.appendChild(urlLabel);
+  var getcodeForm = document.createElement('form');
+  var longurlInput = document.createElement('input');
+  longurlInput.setAttribute('type', 'text');
+  longurlInput.setAttribute('placeholder', 'https://www.alongurl.com/that/should/be/short');
+  getcodeForm.appendChild(longurlInput);
+  var submitBtn = document.createElement("button");
+  submitBtn.innerText = "Shorten dat bish!";
+  getcodeForm.appendChild(submitBtn);
+  getcodeForm.addEventListener('submit', function (event) {
+    var pattern = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+
+    if (!longurlInput.value) {
+      alert("Enter a URL to be shortened.");
+      return Home();
+    }
+
+    if (!pattern.test(longurlInput.value)) {
+      alert(longurlInput.value + " is not a valid URL.");
+      return Home();
+    }
+
+    event.preventDefault();
+    var req = new _url_service_grpc_web_pb.ShortURLReq();
+    req.setLongurl(longurlInput.value);
+
+    _app.shortClient.createURL(req, {}, function (err, res) {
+      if (err) {
+        alert(err.message);
+        return Home();
+      }
+
+      console.log(res);
+      alert(window.location.href + res.getShorturl());
+      return Home();
+    });
+  });
+  homeDiv.appendChild(getcodeForm);
+  document.body.appendChild(homeDiv);
+}
+},{"../app":"app.js","../pb/url_service_grpc_web_pb":"pb/url_service_grpc_web_pb.js"}],"views/geturl.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.GetUrl = GetUrl;
+
+var _app = require("../app");
+
+function GetUrl() {
+  null;
+}
+},{"../app":"app.js"}],"app.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.shortClient = exports.router = void 0;
+
 var _navigo = _interopRequireDefault(require("navigo"));
+
+var _home = require("./views/home");
+
+var _geturl = require("./views/geturl");
 
 var _url_service_grpc_web_pb = require("./pb/url_service_grpc_web_pb");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var shortClient = new _url_service_grpc_web_pb.ShortenerClient('http://grpc_server:8080', null, null);
+exports.shortClient = shortClient;
 var router = new _navigo.default();
-console.log(_url_service_grpc_web_pb.CreatURL);
-router.on("/", function () {
-  document.body.innerHTML = "Home";
-}).resolve();
-},{"navigo":"node_modules/navigo/lib/navigo.min.js","./pb/url_service_grpc_web_pb":"pb/url_service_grpc_web_pb.js"}],"C:/Users/Dal/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+exports.router = router;
+router.on("/", _home.Home).on("/:code", _geturl.GetUrl).resolve();
+},{"navigo":"node_modules/navigo/lib/navigo.min.js","./views/home":"views/home.js","./views/geturl":"views/geturl.js","./pb/url_service_grpc_web_pb":"pb/url_service_grpc_web_pb.js"}],"C:/Users/Dal/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -3630,7 +3710,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56245" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64339" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
