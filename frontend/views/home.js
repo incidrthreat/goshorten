@@ -24,16 +24,10 @@ function Home() {
     getcodeForm.addEventListener('submit', event => {
         var pattern = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
 
-        if(!longurlInput.value) {
-            alert("Enter a URL to be shortened.")
-            return Home()
-        }
-
         if(!pattern.test(longurlInput.value)){
             alert(longurlInput.value + " is not a valid URL.")
             return Home()
         }
-
 
         event.preventDefault()
         let req = new ShortURLReq()
