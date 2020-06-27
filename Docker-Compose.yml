@@ -2,12 +2,15 @@ version: "3.2"
 services: 
     grpcbackend:
         build: backend/.
-        # ports:
-            # - "8080:8080"
-            # - "9000:9000"
+        ports:
+            - "8080:8080"
+            - "9000:9000"
         networks:
             - backend
         links: 
+            - redis
+            # - frontend
+        depends_on: 
             - redis
 
     redis:
@@ -16,15 +19,18 @@ services:
         networks: 
             - backend
 
-    frontend:
-        build: frontend/.
-        ports:
-            - "1234:1234"
-            - "3000:3000"
-        networks:
-            - backend
-        links:
-            - grpcbackend
+    #
+    #   Running in container is causing some CORS issue (TODO: Fix)
+    #
+    # frontend:
+        # domainname: 
+            # - "frontend.local"
+        # build: frontend/.
+        # ports:
+            # - "1234:1234"
+            # - "3000:3000"
+        # networks:
+            # - backend
 
 networks:
     backend:
