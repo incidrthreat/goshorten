@@ -1,7 +1,6 @@
 import Navigo from 'navigo'
 
 import { Home } from './views/home'
-import { GetUrl } from './views/geturl'
 
 import { ShortenerClient, URLReq } from './pb/url_service_grpc_web_pb'
 
