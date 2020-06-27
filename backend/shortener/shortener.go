@@ -2,6 +2,7 @@ package shortener
 
 import (
 	"context"
+	"errors"
 
 	pb "github.com/incidrthreat/goshorten/backend/pb"
 
@@ -22,7 +23,7 @@ func (c *CreateServer) CreateURL(ctx context.Context, req *pb.ShortURLReq) (*pb.
 
 	if url == "" {
 		log.Error("No URL Reqested")
-		return &pb.ShortURLResp{}, nil
+		return &pb.ShortURLResp{}, errors.New("No URL Requested")
 	}
 
 	log.Info("CreateURL Req", "Shorten Request", hclog.Fmt("%s", url))
@@ -30,6 +31,7 @@ func (c *CreateServer) CreateURL(ctx context.Context, req *pb.ShortURLReq) (*pb.
 	code, err := c.Store.Save(url)
 	if err != nil {
 		log.Error("Redis Save:", "Unable to save", err)
+		return &pb.ShortURLResp{}, errors.New("Unable to store URL")
 	}
 
 	resp := &pb.ShortURLResp{
@@ -44,13 +46,13 @@ func (c *CreateServer) GetURL(ctx context.Context, req *pb.URLReq) (*pb.URLResp,
 	code := req.GetUrlCode()
 	if code == "" {
 		log.Error("GetURL", "Error", "No Code Reqested")
-		return &pb.URLResp{}, nil
+		return &pb.URLResp{}, errors.New("No Code Requested")
 	}
 
 	fullURL, err := c.Store.Load(code)
 	if err != nil {
 		log.Error("Redis Load:", "Unable to Load URL", err)
-		return &pb.URLResp{}, nil
+		return &pb.URLResp{}, errors.New("URL expired or not in storage")
 	}
 
 	resp := &pb.URLResp{
