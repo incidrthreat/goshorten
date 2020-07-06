@@ -16,7 +16,6 @@ import (
 	"github.com/incidrthreat/goshorten/backend/config"
 	"github.com/incidrthreat/goshorten/backend/shortener"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -47,7 +46,7 @@ func main() {
 	log.Info("Server listening on", "Host:Port", hclog.Fmt("%v", conf.GRPCHost))
 
 	gs := grpc.NewServer()
-	reflection.Register(gs) // Remove before production
+	// reflection.Register(gs) // Remove before production
 
 	pb.RegisterShortenerServer(gs, &shortener.CreateServer{
 		Store: store,
