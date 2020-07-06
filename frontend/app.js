@@ -5,7 +5,7 @@ import { NotFound } from './views/errors'
 
 import { ShortenerClient, URLReq } from './pb/url_service_grpc_web_pb'
 
-const shortClient = new ShortenerClient('http://localhost:8080')
+const shortClient = new ShortenerClient('http://grpcbackend:8080')
 
 const navRoot = window.location.origin + '/'
 
