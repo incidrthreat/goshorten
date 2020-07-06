@@ -1,6 +1,7 @@
 import Navigo from 'navigo'
 
 import { Home } from './views/home'
+import { NotFound } from './views/errors'
 
 import { ShortenerClient, URLReq } from './pb/url_service_grpc_web_pb'
 
@@ -28,6 +29,7 @@ router
             return window.location.replace(res.getRedirecturl())
         })
     })
+    .notFound(NotFound)
     .resolve()
 
 export { router, shortClient }
