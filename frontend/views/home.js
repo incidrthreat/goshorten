@@ -22,7 +22,7 @@ function Home() {
     getcodeForm.appendChild(submitBtn)
 
     getcodeForm.addEventListener('submit', event => {
-        var pattern = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+        var pattern = /([Hh]ttp|[Hh]ttps):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
 
         if(!pattern.test(longurlInput.value)){
             alert(longurlInput.value + " is not a valid URL.")
