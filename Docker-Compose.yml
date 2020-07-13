@@ -12,7 +12,11 @@ services:
 
     redis:
         image: "redis:alpine"
-        command: redis-server --requirepass P@ssword
+        privileged: true
+        command: >
+            sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled &&
+            echo never > /sys/kernel/mm/transparent_hugepage/defrag &&
+            redis-server --requirepass P@ssword"
         networks: 
             - backend
 
