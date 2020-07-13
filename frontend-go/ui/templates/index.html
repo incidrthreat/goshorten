@@ -20,6 +20,7 @@
             </script>
         {{ end }}
         {{ if .Error }}
+            <h1>You done messed up!</h1>
             <div class="alert alert-danger" role="alert">
                 {{ .Error }}
             </div>
