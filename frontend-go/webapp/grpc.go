@@ -28,7 +28,7 @@ func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
 
 // GetURL ...
 func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
-	validCode := regexp.MustCompile(`^[a-zA-Z0-9]{3,6}?`)
+	validCode := regexp.MustCompile(`^[a-zA-Z0-9]{3,6}$`)
 	vars := mux.Vars(r)
 	code := vars["code"]
 
