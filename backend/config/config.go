@@ -9,7 +9,6 @@ import (
 
 // Configuration - the server config
 type Configuration struct {
-	GRPCProxyAddr   string    `json:"grpc_proxy_addr"`
 	ListenInterface string    `json:"listen_interface"`
 	Redis           RedisConf `json:"redis_conf"`
 	GRPCHost        string    `json:"grpc_host"`
