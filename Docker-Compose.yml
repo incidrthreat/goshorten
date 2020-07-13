@@ -17,6 +17,8 @@ services:
             sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled &&
             echo never > /sys/kernel/mm/transparent_hugepage/defrag &&
             redis-server --requirepass P@ssword"
+        sysctls:
+            - net.core.somaxconn=1024
         networks: 
             - backend
 
