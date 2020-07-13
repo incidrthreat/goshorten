@@ -16,6 +16,7 @@ const (
 
 func main() {
 	conn, err := grpc.Dial("grpcbackend:9000", grpc.WithInsecure())
+	// TODO: Better error handling and keep-alive
 	if err != nil {
 		log.Println(err)
 	}
