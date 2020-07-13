@@ -8,6 +8,6 @@ COPY . /app/
 
 RUN go build -o grpc-server .
 
-EXPOSE 8080
+EXPOSE 9000
 
 CMD ["./grpc-server"]
