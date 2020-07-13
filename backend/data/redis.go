@@ -8,13 +8,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// RedisStore defines the interface for storages to implement. Any store that is
-// implemented must conform this.
-type RedisStore interface {
-	Save(string) (string, error)
-	Load(string) (string, error)
-}
-
 var log = hclog.Default()
 
 // Redis data struct
