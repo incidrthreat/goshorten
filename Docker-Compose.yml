@@ -3,9 +3,6 @@ services:
     grpcbackend:
         hostname: grpcbackend
         build: backend/.
-        # ports:
-        #     # - "8080:8080"
-        #     # - "9000:9000"
         networks:
             - backend
         links: 
@@ -19,15 +16,12 @@ services:
         networks: 
             - backend
 
-    #
-    #   Running in container with docker-compose is causing some CORS issue (TODO: Fix)
-    #
+        
     frontend:
         hostname: frontend
-        build: frontend/.
+        build: frontend-go/.
         ports:
-            - "1234:1234"
-            - "3000:3000"
+            - "8081:8081"
         networks:
             - backend
         links:
