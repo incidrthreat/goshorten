@@ -14,6 +14,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	version string = "1.0.0"
+)
+
 func main() {
 	log := hclog.Default()
 	conf, err := config.ConfigFromFile("config.json")
@@ -21,6 +25,8 @@ func main() {
 		log.Error("Problem with Json file", "error", err)
 		os.Exit(1)
 	}
+
+	log.Info("GoShorten URL Shortener", "Version", version)
 
 	store := data.Redis{
 		CharFloor: conf.Redis.CharFloor,
