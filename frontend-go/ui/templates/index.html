@@ -3,9 +3,9 @@
 <div class="home-div">
     {{ if not . }}
     <h1>URL Shortener</h1>
-    <form action="/" method="post">
-        <input type="text" name="url" placeholder="https://www.alongurl.com/that/should/be/short">
-        <button>Shorten dat bish!</button>
+    <form id="urlform" action="/" method="post">
+        <input type="text" id="url" name="url" placeholder="https://www.alongurl.com/that/should/be/short">
+        <button id="button" >Shorten dat bish!</button>
     </form>
     <div>
     {{ else }}
