@@ -8,13 +8,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// RedisStore defines the interface for storages to implement. Any store that is
-// implemented must conform this.
-type RedisStore interface {
-	Save(string) (string, error)
-	Load(string) (string, error)
-}
-
 var log = hclog.Default()
 
 // Redis data struct
@@ -69,9 +62,9 @@ func (r Redis) Load(code string) (string, error) {
 
 // set inserts the code:url as key:value
 func set(c *redis.Client, code string, fullURL string) error {
-	/* Sets the code as the key and the url as the value with a TTL of 60 seconds.  Default
+	/* Sets the code as the key and the url as the value with a TTL of 300 seconds (5 min).  Default
 	will be	172800 Seconds (48 hrs) in production. */
-	if err := c.Set(fullURL, code, time.Duration(60*time.Second)).Err(); err != nil {
+	if err := c.Set(fullURL, code, time.Duration(300*time.Second)).Err(); err != nil {
 		return err
 	}
 

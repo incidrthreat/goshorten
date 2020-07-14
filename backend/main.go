@@ -12,7 +12,6 @@ import (
 	"github.com/incidrthreat/goshorten/backend/config"
 	"github.com/incidrthreat/goshorten/backend/shortener"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -40,15 +39,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("Server listening on", "Host:Port", hclog.Fmt("%v", conf.GRPCHost))
-
 	gs := grpc.NewServer()
-	reflection.Register(gs) // Remove before production
+	// reflection.Register(gs) // Remove before production
 
 	pb.RegisterShortenerServer(gs, &shortener.CreateServer{
 		Store: store,
 	})
 
-	gs.Serve(lis)
-
+	log.Info("Serving gRPC", "Host", hclog.Fmt("%s", conf.GRPCHost))
+	err = gs.Serve(lis)
+	if err != nil {
+		log.Error("Serve Error", "Error", err)
+	}
 }

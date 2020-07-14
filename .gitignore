@@ -1,1 +1,6 @@
+# Backend ignore
 config.json
+
+# Frontend ignore
+frontend-go/.cache
+frontend-go/dist
