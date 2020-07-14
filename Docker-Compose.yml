@@ -1,19 +1,37 @@
 version: "3.2"
 services: 
-    grpc_server:
+    grpcbackend:
+        hostname: grpcbackend
         build: backend/.
-        ports: 
-            - "9000:9000"
         networks:
             - backend
         links: 
             - redis
+        depends_on: 
+            - redis
 
     redis:
         image: "redis:alpine"
-        command: redis-server --requirepass P@ssword
+        privileged: true
+        command: >
+            sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled &&
+            echo never > /sys/kernel/mm/transparent_hugepage/defrag &&
+            redis-server --requirepass P@ssword"
+        sysctls:
+            - net.core.somaxconn=1024
         networks: 
             - backend
+
+        
+    frontend:
+        hostname: frontend
+        build: frontend-go/.
+        ports:
+            - "8081:8081"
+        networks:
+            - backend
+        links:
+            - grpcbackend
 
 networks:
     backend:

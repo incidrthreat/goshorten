@@ -6,8 +6,8 @@ WORKDIR /app/
 
 COPY . /app/
 
-RUN go build -o grpc-server .
+RUN go build -o grpc-client ./cmd/*
 
-EXPOSE 9000
+EXPOSE 8081
 
-CMD ["./grpc-server"]
+CMD ["./grpc-client"]

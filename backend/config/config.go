@@ -11,7 +11,6 @@ import (
 type Configuration struct {
 	ListenInterface string    `json:"listen_interface"`
 	Redis           RedisConf `json:"redis_conf"`
-	BaseURL         string    `json:"base_url"`
 	GRPCHost        string    `json:"grpc_host"`
 }
 

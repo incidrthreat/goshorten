@@ -1,0 +1,31 @@
+{{ define "page-title"}} URL Shortener {{ end }}
+{{ define "page-body" }}
+<div class="home-div">
+    {{ if not . }}
+    <h1>URL Shortener</h1>
+    <form action="/" method="post">
+        <input type="text" name="url" placeholder="https://www.alongurl.com/that/should/be/short">
+        <button onclick="getHostmane()">Shorten dat bish!</button>
+    </form>
+    <div>
+    {{ else }}
+        {{ if .Data }}
+            <h1>Shortened URL</h1>
+            <div class="alert alert-success" role="alert" id="url">
+            </div>
+            <script>
+                var host = window.location.origin;
+                document.getElementById("url").innerHTML = host + '/' + '{{ .Data }}';
+                console.log(host)
+            </script>
+        {{ end }}
+        {{ if .Error }}
+            <h1>You done messed up!</h1>
+            <div class="alert alert-danger" role="alert">
+                {{ .Error }}
+            </div>
+        {{ end }}
+    {{ end }}
+    </div>
+</div>
+{{ end }}
