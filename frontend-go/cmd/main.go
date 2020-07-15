@@ -12,6 +12,7 @@ const (
 	port      string = ":8081"
 	htmlDir   string = "./ui/templates"
 	staticDir string = "./ui/static"
+	version   string = "1.0.0"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 		Conn:      conn,
 	}
 
-	log.Printf("Starting URL Shortener on port %s", port)
+	log.Printf("Starting %s URL Shortener on port %s", version, port)
 
 	err = http.ListenAndServe(port, app.Routes())
 	log.Fatal(err)
