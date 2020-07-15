@@ -35,10 +35,12 @@ func (r *Redis) Save(url string) (string, error) {
 	// discover returns a uniqe code doesnt exist
 	code, err := generate(r.Client, r.CharFloor)
 	if err != nil {
+		log.Error("Redis Save Error", "Generate code", hclog.Fmt("%v", err))
 		return "", err
 	}
 	err = set(r.Client, url, code)
 	if err != nil {
+		log.Error("Redis Set Error", "Details", hclog.Fmt("%v", err))
 		return "", err
 	}
 	log.Info("Redis Save", "Code stored", hclog.Fmt("Code: %s URL: %s", code, url))
@@ -73,13 +75,20 @@ func set(c *redis.Client, code string, fullURL string) error {
 
 // generates a unqiue code and checks if valid
 func generate(c *redis.Client, n int) (string, error) {
+	tries := 0
 	code := GenCode(n)
 	exists := c.Exists(code).Val()
 
-	if exists == 0 {
-		return code, nil
+	for exists != 0 && n <= 6 && tries < 3 {
+		log.Warn("Redis Warning", "Key Collision", hclog.Fmt("Code: %s, generating new code.", code))
+		code = GenCode(n + 1)
+		exists = c.Exists(code).Val()
+		tries += tries
 	}
 
-	log.Info("Redis Discover:", "Key Collision", "Generating new code")
-	return generate(c, n+1)
+	if tries == 2 {
+		return "", errors.New("Too many code collisions")
+	}
+
+	return code, nil
 }
