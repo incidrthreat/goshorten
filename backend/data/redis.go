@@ -75,19 +75,21 @@ func set(c *redis.Client, code string, fullURL string) error {
 
 // generates a unqiue code and checks if valid
 func generate(c *redis.Client, n int) (string, error) {
-	tries := 0
 	code := GenCode(n)
 	exists := c.Exists(code).Val()
 
-	for exists != 0 && n <= 6 && tries < 3 {
+	// genAttempts and the below for loop provide 3 tries before exiting with too many collisions detected.
+	// Thanks @maikthulhu for catching this and suggestion that 0 + 0 indeed equals 0. <3
+	genAttempts := 3
+	for exists != 0 && n <= 6 && genAttempts > 0 {
 		log.Warn("Redis Warning", "Key Collision", hclog.Fmt("Code: %s, generating new code.", code))
 		code = GenCode(n + 1)
 		exists = c.Exists(code).Val()
-		tries += tries
+		genAttempts--
 	}
 
-	if tries == 2 {
-		return "", errors.New("Too many code collisions")
+	if genAttempts == 0 {
+		return "", errors.New("3 code collisions detected, try again later")
 	}
 
 	return code, nil
