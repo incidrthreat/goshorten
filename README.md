@@ -3,7 +3,7 @@
 This project spawned due to my curiousity in gRPC, golang, and building something practical to share.
 ___________________________
 ## What is GoShorten?
-GoShorten is a self-hosted URL Shortener written in Golang.  It uses a gRPC server on the "backend" for API calls and stores data in on a Redis Database.  The current Time-To-Live for each URL/Code is set for 5 minutes. 
+GoShorten is a self-hosted URL Shortener written in Golang.  It uses a gRPC server on the "backend" for API calls and stores data in a Redis Database.  The current Time-To-Live for each URL/Code is set for 5 minutes. 
 ___________________________
 ## Getting Started
 
