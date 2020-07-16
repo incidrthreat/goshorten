@@ -86,9 +86,10 @@ func generate(c *redis.Client, n int) (string, error) {
 		code = GenCode(n + 1)
 		exists = c.Exists(code).Val()
 		genAttempts--
-		if genAttempts == 0 {
-			return "", errors.New("3 code collisions detected, try again later")
-		}
+	}
+
+	if genAttempts == 0 {
+		return "", errors.New("3 code collisions detected, try again later")
 	}
 
 	return code, nil
