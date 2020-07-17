@@ -9,8 +9,10 @@ None yet.
 
 ## [1.0.1] - 2020-07-17
 ### Added
-- cmd/main.go
+- frontend/cmd/main.go
   - added TLS certificates for secure connection grpc server
+- frontend-go/
+  - added server.crt public certificate
 
 ## [1.0.0] - 2020-07-14
 ### Added

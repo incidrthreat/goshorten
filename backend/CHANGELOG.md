@@ -11,6 +11,8 @@ None yet.
 ### Added
 - backend/main.go
   - added TLS certificates for accept secure connections from grpc clients
+- backend/
+  - added server.crt, server.key, server.csr
 
 ## [1.0.1] - 2020-07-15
 ### Edited
