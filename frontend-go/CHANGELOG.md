@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 None yet.
 
+## [1.0.1] - 2020-07-17
+### Added
+- cmd/main.go
+  - added TLS certificates for secure connection grpc server
+
 ## [1.0.0] - 2020-07-14
 ### Added
 - Initial build
