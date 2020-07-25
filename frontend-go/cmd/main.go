@@ -1,25 +1,34 @@
 package main
 
 import (
-	"log"
+	"context"
 	"net/http"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/incidrthreat/goshorten/frontend-go/webapp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
 	port      string = ":8081"
 	htmlDir   string = "./ui/templates"
 	staticDir string = "./ui/static"
-	version   string = "1.0.0"
+	version   string = "1.0.1"
 )
 
 func main() {
-	conn, err := grpc.Dial("grpcbackend:9000", grpc.WithInsecure())
+	log := hclog.Default()
+
+	clientCert, err := credentials.NewClientTLSFromFile("server.crt", "")
+	if err != nil {
+		log.Error("Failed to create Certificate", "Error", err)
+	}
+
+	conn, err := grpc.DialContext(context.Background(), "grpcbackend:9000", grpc.WithTransportCredentials(clientCert))
 	// TODO: Better error handling and keep-alive
 	if err != nil {
-		log.Println(err)
+		log.Error("Failed to connect to gRPC Server", "Error", err)
 	}
 	defer conn.Close()
 
@@ -29,9 +38,9 @@ func main() {
 		Conn:      conn,
 	}
 
-	log.Printf("Starting %s URL Shortener on port %s", version, port)
+	log.Info("Starting URL Shortener Client", "Version/Port", hclog.Fmt("%s/%s", version, port))
 
 	err = http.ListenAndServe(port, app.Routes())
-	log.Fatal(err)
+	log.Error("Failed to listen and serve HTTP", "Error", err)
 
 }

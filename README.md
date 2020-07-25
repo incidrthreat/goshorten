@@ -16,22 +16,25 @@ ___________________________
 
 2. `cd goshorten`
 
-3. In the /backend directory, rename `config.json.example` to `config.json`
+3. Execute `generate-tls-certs.sh` to generate the TLS certs.
+
+4. In the /backend directory, rename `config.json.example` to `config.json`
     1. Currently only supports Redis.
 
-4. `docker-compose up` or `docker-compose up -d` 
+5. `docker-compose up` or `docker-compose up -d` 
     1. Redis "password" is on line 19 in `docker-compose.yml`
-    2. Change as necessary
+    2. Change password as necessary
 
-5. open your favorite browser to `localhost:8081`
+6. open your favorite browser to `localhost:8081`
+
 ___________________________
 ## Screenshots
 #### Home Page
-![Home Page](/screenshots/homepage.png)
+![Home Page](/screenshots/homepageV1.0.1.png)
 #### Successful Code creation
-![Success!](/screenshots/successfulcode.png)
+![Success!](/screenshots/successfulcodeV1.0.1.png)
 #### Invalid Code retreival
-![Invalid](/screenshots/invalidcode.png)
+![Invalid](/screenshots/invalidcodeV1.0.1.png)
 __________________________
 ## Contributing
 

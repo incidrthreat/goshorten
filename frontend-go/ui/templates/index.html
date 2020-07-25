@@ -15,15 +15,28 @@
             </div>
             <script>
                 var host = window.location.origin;
-                document.getElementById("url").innerHTML = host + '/' + '{{ .Data }}';
-                console.log(host)
+                document.getElementById("url").innerHTML = '<div id="shorturl">' + host + '/' + '{{ .Data }}</div>';
+                document.getElementById("url").insertAdjacentHTML("afterend", '<div><button class="btn" id="button" onclick="copyText();"><i class="fa fa-copy"></i> Copy dat bish!</button></div>');
+
+                function copyText(){
+                    var range = document.createRange();
+                    range.selectNode(document.getElementById('shorturl'));
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(range);
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                    document.getElementById("button").innerText = "Copied!"
+                }
             </script>
         {{ end }}
         {{ if .Error }}
             <h1>You done messed up!</h1>
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-danger" role="alert" id="error">
                 {{ .Error }}
             </div>
+            <script>
+                document.getElementById("error").insertAdjacentHTML("afterend", `<div><button class="bnt" id="button" onclick="window.location.href='/'";><i class="fa fa-retweet"></i> Try again</button></div>`);
+            </script>
         {{ end }}
     {{ end }}
     </div>

@@ -12,21 +12,28 @@ import (
 	"github.com/incidrthreat/goshorten/backend/config"
 	"github.com/incidrthreat/goshorten/backend/shortener"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
-	version string = "1.0.1"
+	version string = "1.0.2"
 )
 
 func main() {
 	log := hclog.Default()
+
+	serverCert, err := credentials.NewServerTLSFromFile("server.crt", "server.key")
+	if err != nil {
+		log.Error("Failed to create Certificate", "Error", err)
+	}
+
 	conf, err := config.ConfigFromFile("config.json")
 	if err != nil {
 		log.Error("Problem with Json file", "error", err)
 		os.Exit(1)
 	}
 
-	log.Info("GoShorten URL Shortener", "Version", version)
+	log.Info("GoShorten URL Shortener Server", "Version", version)
 
 	store := data.Redis{
 		CharFloor: conf.Redis.CharFloor,
@@ -45,7 +52,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	gs := grpc.NewServer()
+	gs := grpc.NewServer(grpc.Creds(serverCert))
 	// reflection.Register(gs) // Remove before production
 
 	pb.RegisterShortenerServer(gs, &shortener.CreateServer{
