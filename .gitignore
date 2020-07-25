@@ -4,3 +4,9 @@ config.json
 # Frontend ignore
 frontend-go/.cache
 frontend-go/dist
+
+# Client/Server Certs
+backend/server.key
+backend/server.crt
+backend/server.csr
+frontend-go/server.crt
