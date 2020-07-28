@@ -12,7 +12,7 @@ func (app *App) Routes() *mux.Router {
 
 	r.HandleFunc("/", app.Index).Methods("GET")
 	r.HandleFunc("/", app.GetCode).Methods("POST")
-	r.HandleFunc("/{code}", app.GetURL).Methods("Get")
+	r.HandleFunc("/{code}", app.GetURL).Methods("GET")
 
 	fs := http.FileServer(http.Dir(app.StaticDir))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
