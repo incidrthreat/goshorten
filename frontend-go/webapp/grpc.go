@@ -12,10 +12,18 @@ import (
 
 // GetCode ...
 func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
+	validURL := regexp.MustCompile(`[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`)
+
+	if !validURL.MatchString(r.PostFormValue("url")) {
+		app.RenderHTML(w, r, "index.html", &HTMLData{Data: "", Error: "Not valid URL"})
+		return
+	}
+
 	c := pb.NewShortenerClient(app.Conn)
 
-	resp, err := c.CreateURL(context.Background(), &pb.ShortURLReq{
+	resp, err := c.CreateURL(context.Background(), &pb.URL{
 		LongUrl: r.PostFormValue("url"),
+		TTL:     r.PostFormValue("ttl"),
 	})
 
 	if err != nil {
@@ -23,7 +31,7 @@ func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.RenderHTML(w, r, "index.html", &HTMLData{Data: resp.ShortUrl, Error: ""})
+	app.RenderHTML(w, r, "index.html", &HTMLData{Data: resp.Code, Error: ""})
 }
 
 // GetURL ...
@@ -38,8 +46,8 @@ func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := pb.NewShortenerClient(app.Conn)
-	resp, err := c.GetURL(context.Background(), &pb.URLReq{
-		UrlCode: code,
+	resp, err := c.GetURL(context.Background(), &pb.Code{
+		Code: code,
 	})
 
 	if err != nil {
@@ -47,5 +55,5 @@ func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, resp.RedirectUrl, 302)
+	http.Redirect(w, r, resp.LongUrl, 302)
 }
