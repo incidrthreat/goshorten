@@ -15,7 +15,12 @@ func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
 	validURL := regexp.MustCompile(`[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`)
 
 	if !validURL.MatchString(r.PostFormValue("url")) {
-		app.RenderHTML(w, r, "index.html", &HTMLData{Data: "", Error: "Not valid URL"})
+		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "Not valid URL"})
+		return
+	}
+
+	if r.PostFormValue("ttl") == "" {
+		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "Choose a TTL"})
 		return
 	}
 
@@ -27,11 +32,11 @@ func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		app.RenderHTML(w, r, "index.html", &HTMLData{Data: "", Error: "Unable to store URL"})
+		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "Unable to store URL"})
 		return
 	}
 
-	app.RenderHTML(w, r, "index.html", &HTMLData{Data: resp.Code, Error: ""})
+	app.RenderHTML(w, r, "index.html", &HTMLData{Data: resp.Code})
 }
 
 // GetURL ...
@@ -41,7 +46,7 @@ func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
 	code := vars["code"]
 
 	if !validCode.MatchString(code) || code == "code" {
-		app.RenderHTML(w, r, "index.html", &HTMLData{Data: "", Error: "Not valid URL Code"})
+		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "Not valid URL Code"})
 		return
 	}
 
@@ -51,9 +56,15 @@ func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		app.RenderHTML(w, r, "index.html", &HTMLData{Data: "", Error: "URL expired"})
+		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "URL expired"})
 		return
 	}
 
-	http.Redirect(w, r, resp.LongUrl, 302)
+	prefix := regexp.MustCompile(`^https?://`)
+
+	if !prefix.MatchString(resp.LongUrl) {
+		http.Redirect(w, r, "http://"+resp.LongUrl, 308)
+	} else {
+		http.Redirect(w, r, resp.LongUrl, 308)
+	}
 }
