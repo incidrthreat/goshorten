@@ -1,20 +1,34 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+@import url(http://fonts.googleapis.com/css?family=Bitter:400,700);
 
-* {
-    font-family: 'Roboto', sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+html, body {
+	width: 100%;
+	/* height: 80%; */
+	font-family: 'Roboto', sans-serif;
+	color: #000;
 }
 
-h1 {
-    padding: 0;
-    margin: 105px auto 100;
+p {
+    font-size: 160%;
+    text-decoration: underline;
+    letter-spacing: 2px;
+    font-weight: 600;
 }
+
+div.page-title {
+    text-align: center;
+    padding: 0;
+    margin: 45px auto 20px;
+    font-size: 300%;
+    color: white;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+
 
 div.home-div {
-    margin: 20px auto;
-    padding: 25px 20px 30px;
+    margin: 45px auto 0px;
+    padding: 25px 20px;
     text-align: center;
     background: #e8e8e8;
     width: 95%;
@@ -22,16 +36,30 @@ div.home-div {
     border-radius: 10px;
 }
 
+div#ttl {
+    margin: 25px auto;
+}
+
+label[name="title"] {
+    display: block;
+    font-weight: bolder;
+}
+
 form#urlform {
     width: 90%;
+    margin: 25px auto;
     display: inline-block;
     padding: 0;
 }
 
+input[name="ttl"] {
+    margin-left: 20px;
+}
+
 input#url {
-    width: 100%;
+    width: 95%;
     padding: 12px 20px;
-    margin: auto;
+    margin: 10px auto;
     display: inline-block;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -42,7 +70,7 @@ input#url {
 
 button#button {
     padding:15px 35px;
-    margin: 20px auto 5px;
+    margin: 20px auto;
     display: block;
     border: none;
     border-radius: 5px;
@@ -50,8 +78,4 @@ button#button {
     color: white;
     font-size: 13pt;
     cursor: pointer;
-}
-
-.alert {
-    margin: 30px auto;
 }
