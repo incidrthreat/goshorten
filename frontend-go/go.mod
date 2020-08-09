@@ -3,6 +3,7 @@ module github.com/incidrthreat/goshorten/frontend-go
 go 1.14
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/go-hclog v0.14.1
