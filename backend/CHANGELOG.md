@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 None yet.
 
+## [1.0.3] - 2020-08-09
+### Added
+- Added grpc Time-To-Live save and get func
+
 ## [1.0.2] - 2020-07-25
 ### Added
 - backend/main.go
