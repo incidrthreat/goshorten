@@ -30,11 +30,11 @@ ___________________________
 ___________________________
 ## Screenshots
 #### Home Page
-![Home Page](/screenshots/homepageV1.0.1.png)
+![Home Page](/screenshots/homepageV1.0.2.png)
 #### Successful Code creation
-![Success!](/screenshots/successfulcodeV1.0.1.png)
+![Success!](/screenshots/successfulcodeV1.0.2.png)
 #### Invalid Code retreival
-![Invalid](/screenshots/invalidcodeV1.0.1.png)
+![Invalid](/screenshots/invalidcodeV1.0.2.png)
 __________________________
 ## Contributing
 
