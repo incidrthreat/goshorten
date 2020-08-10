@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -28,11 +27,10 @@ func (r *Redis) Init() {
 	} else {
 		log.Info("Redis Server", "Connection", "Online")
 	}
-
 }
 
 // Save saves data to redis
-func (r *Redis) Save(url, ttl string) (string, error) {
+func (r *Redis) Save(url string, ttl int64) (string, error) {
 	// discover returns a uniqe code doesnt exist
 	code, err := generate(r.Client, r.CharFloor)
 	if err != nil {
@@ -44,7 +42,7 @@ func (r *Redis) Save(url, ttl string) (string, error) {
 		log.Error("Redis Set Error", "Details", hclog.Fmt("%v", err))
 		return "", err
 	}
-	log.Info("Redis Save", "Code stored", hclog.Fmt("Code: %s | URL: %s | TTL: %s", code, url, ttl))
+	log.Info("Redis Save", "Code stored", hclog.Fmt("Code: %s | URL: %s | TTL: %d Seconds", code, url, ttl))
 	return code, nil
 }
 
@@ -64,15 +62,10 @@ func (r Redis) Load(code string) (string, error) {
 }
 
 // set inserts the code:url as key:value
-func set(c *redis.Client, code, fullURL, ttl string) error {
-	ttl64, err := strconv.ParseInt(ttl, 10, 64)
-	if err != nil {
-		return errors.New("TTL str Conversion failed")
-	}
-	if err := c.Set(fullURL, code, time.Duration(ttl64)*time.Second).Err(); err != nil {
+func set(c *redis.Client, code string, fullURL string, ttl int64) error {
+	if err := c.Set(fullURL, code, time.Duration(ttl)*time.Second).Err(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
