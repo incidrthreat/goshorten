@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"regexp"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -26,9 +27,15 @@ func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
 
 	c := pb.NewShortenerClient(app.Conn)
 
+	ttl64, err := strconv.ParseInt(r.PostFormValue("ttl"), 10, 64)
+	if err != nil {
+		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "Could not convert TTL"})
+		return
+	}
+
 	resp, err := c.CreateURL(context.Background(), &pb.URL{
 		LongUrl: r.PostFormValue("url"),
-		TTL:     r.PostFormValue("ttl"),
+		TTL:     ttl64,
 	})
 
 	if err != nil {
