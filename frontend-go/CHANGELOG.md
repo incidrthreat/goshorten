@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 None yet.
 
+## [1.0.2] - 2020-08-09
+### Added
+- Refactored Proto file for efficiency
+  - added user choice of Time-To-Live
+- Improved webgui
+
 ## [1.0.1] - 2020-07-25
 ### Added
 - frontend/cmd/main.go

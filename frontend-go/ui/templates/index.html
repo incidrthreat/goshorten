@@ -1,18 +1,29 @@
 {{ define "page-title"}} URL Shortener {{ end }}
 {{ define "page-body" }}
+<div class="page-title">
+    URL Shortener 
+</div>
 <div class="home-div">
     {{ if not . }}
-    <h1>URL Shortener</h1>
-    <form id="urlform" action="/" method="post">
-        <input type="text" id="url" name="url" placeholder="https://www.alongurl.com/that/should/be/short">
+    <form id="url-form" action="/" method="post" class="needs-validation">
+        <label for="url" name="title">Long URL</label>
+        <input type="text" id="url" name="url" placeholder="https://www.alongurl.com/that/should/be/short" required>
+        <div id="ttl">
+            <label for="ttl5 ttl24 ttl48" name="title">URL Expiration: </label>
+            <input type="radio" id="ttl5" name="ttl" value="300" required>
+            <label for="ttl5">5 Minutes</label>
+            <input type="radio" id="ttl24" name="ttl" value="86400" required>
+            <label for="ttl24">24 Hours</label>
+            <input type="radio" id="ttl48" name="ttl" value="172800" required>
+            <label for="ttl48">48 Hours</label>
+        </div>
         <button id="button" >Shorten dat bish!</button>
     </form>
     <div>
     {{ else }}
         {{ if .Data }}
-            <h1>Shortened URL</h1>
-            <div class="alert alert-success" role="alert" id="url">
-            </div>
+            <p>Shortened URL</p>
+            <div class="alert alert-success" role="alert" id="url"></div>
             <script>
                 var host = window.location.origin;
                 document.getElementById("url").innerHTML = '<div id="shorturl">' + host + '/' + '{{ .Data }}</div>';

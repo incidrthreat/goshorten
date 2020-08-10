@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -31,19 +32,19 @@ func (r *Redis) Init() {
 }
 
 // Save saves data to redis
-func (r *Redis) Save(url string) (string, error) {
+func (r *Redis) Save(url, ttl string) (string, error) {
 	// discover returns a uniqe code doesnt exist
 	code, err := generate(r.Client, r.CharFloor)
 	if err != nil {
 		log.Error("Redis Save Error", "Generate code", hclog.Fmt("%v", err))
 		return "", err
 	}
-	err = set(r.Client, url, code)
+	err = set(r.Client, url, code, ttl)
 	if err != nil {
 		log.Error("Redis Set Error", "Details", hclog.Fmt("%v", err))
 		return "", err
 	}
-	log.Info("Redis Save", "Code stored", hclog.Fmt("Code: %s URL: %s", code, url))
+	log.Info("Redis Save", "Code stored", hclog.Fmt("Code: %s | URL: %s | TTL: %s", code, url, ttl))
 	return code, nil
 }
 
@@ -63,10 +64,12 @@ func (r Redis) Load(code string) (string, error) {
 }
 
 // set inserts the code:url as key:value
-func set(c *redis.Client, code string, fullURL string) error {
-	/* Sets the code as the key and the url as the value with a TTL of 300 seconds (5 min).  Default
-	will be	172800 Seconds (48 hrs) in production. */
-	if err := c.Set(fullURL, code, time.Duration(300*time.Second)).Err(); err != nil {
+func set(c *redis.Client, code, fullURL, ttl string) error {
+	ttl64, err := strconv.ParseInt(ttl, 10, 64)
+	if err != nil {
+		return errors.New("TTL str Conversion failed")
+	}
+	if err := c.Set(fullURL, code, time.Duration(ttl64)*time.Second).Err(); err != nil {
 		return err
 	}
 
@@ -82,7 +85,7 @@ func generate(c *redis.Client, n int) (string, error) {
 	// Thanks @maikthulhu for catching this and suggestion that 0 + 0 indeed equals 0. <3
 	genAttempts := 3
 	for exists != 0 && n <= 6 && genAttempts > 0 {
-		log.Warn("Redis Warning", "Key Collision", hclog.Fmt("Code: %s, generating new code.", code))
+		log.Warn("Redis Warning", "Key Collision", hclog.Fmt("Collision on code: %s, generating new code.", code))
 		code = GenCode(n + 1)
 		exists = c.Exists(code).Val()
 		genAttempts--

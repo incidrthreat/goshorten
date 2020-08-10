@@ -1,7 +1,7 @@
 //
 //CreateURL will take in a long url, generate a 6 character code to associate with the URL
 //and store it in a redis datastore for XX amount of time. (length of time undetermined) and
-//return a shortened URL
+//return a shortened URL code m
 //
 //GetURL will take in a code and return/redirect users to the long URL, if still active.
 
@@ -9,7 +9,7 @@
 // versions:
 // 	protoc-gen-go v1.21.0-devel
 // 	protoc        v3.11.4
-// source: protos/url_service.proto
+// source: url_service.proto
 
 package protos
 
@@ -36,31 +36,32 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type ShortURLReq struct {
+type URL struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	LongUrl string `protobuf:"bytes,1,opt,name=LongUrl,proto3" json:"LongUrl,omitempty"`
+	TTL     string `protobuf:"bytes,2,opt,name=TTL,proto3" json:"TTL,omitempty"`
 }
 
-func (x *ShortURLReq) Reset() {
-	*x = ShortURLReq{}
+func (x *URL) Reset() {
+	*x = URL{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_protos_url_service_proto_msgTypes[0]
+		mi := &file_url_service_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *ShortURLReq) String() string {
+func (x *URL) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ShortURLReq) ProtoMessage() {}
+func (*URL) ProtoMessage() {}
 
-func (x *ShortURLReq) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_url_service_proto_msgTypes[0]
+func (x *URL) ProtoReflect() protoreflect.Message {
+	mi := &file_url_service_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -71,43 +72,50 @@ func (x *ShortURLReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ShortURLReq.ProtoReflect.Descriptor instead.
-func (*ShortURLReq) Descriptor() ([]byte, []int) {
-	return file_protos_url_service_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use URL.ProtoReflect.Descriptor instead.
+func (*URL) Descriptor() ([]byte, []int) {
+	return file_url_service_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ShortURLReq) GetLongUrl() string {
+func (x *URL) GetLongUrl() string {
 	if x != nil {
 		return x.LongUrl
 	}
 	return ""
 }
 
-type ShortURLResp struct {
+func (x *URL) GetTTL() string {
+	if x != nil {
+		return x.TTL
+	}
+	return ""
+}
+
+type Code struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ShortUrl string `protobuf:"bytes,1,opt,name=ShortUrl,proto3" json:"ShortUrl,omitempty"`
+	Code string `protobuf:"bytes,1,opt,name=Code,proto3" json:"Code,omitempty"`
 }
 
-func (x *ShortURLResp) Reset() {
-	*x = ShortURLResp{}
+func (x *Code) Reset() {
+	*x = Code{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_protos_url_service_proto_msgTypes[1]
+		mi := &file_url_service_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *ShortURLResp) String() string {
+func (x *Code) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ShortURLResp) ProtoMessage() {}
+func (*Code) ProtoMessage() {}
 
-func (x *ShortURLResp) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_url_service_proto_msgTypes[1]
+func (x *Code) ProtoReflect() protoreflect.Message {
+	mi := &file_url_service_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -118,160 +126,57 @@ func (x *ShortURLResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ShortURLResp.ProtoReflect.Descriptor instead.
-func (*ShortURLResp) Descriptor() ([]byte, []int) {
-	return file_protos_url_service_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use Code.ProtoReflect.Descriptor instead.
+func (*Code) Descriptor() ([]byte, []int) {
+	return file_url_service_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ShortURLResp) GetShortUrl() string {
+func (x *Code) GetCode() string {
 	if x != nil {
-		return x.ShortUrl
+		return x.Code
 	}
 	return ""
 }
 
-type URLReq struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
+var File_url_service_proto protoreflect.FileDescriptor
 
-	UrlCode string `protobuf:"bytes,1,opt,name=UrlCode,proto3" json:"UrlCode,omitempty"`
-}
-
-func (x *URLReq) Reset() {
-	*x = URLReq{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_protos_url_service_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *URLReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*URLReq) ProtoMessage() {}
-
-func (x *URLReq) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_url_service_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use URLReq.ProtoReflect.Descriptor instead.
-func (*URLReq) Descriptor() ([]byte, []int) {
-	return file_protos_url_service_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *URLReq) GetUrlCode() string {
-	if x != nil {
-		return x.UrlCode
-	}
-	return ""
-}
-
-type URLResp struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	RedirectUrl string `protobuf:"bytes,1,opt,name=RedirectUrl,proto3" json:"RedirectUrl,omitempty"`
-}
-
-func (x *URLResp) Reset() {
-	*x = URLResp{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_protos_url_service_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *URLResp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*URLResp) ProtoMessage() {}
-
-func (x *URLResp) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_url_service_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use URLResp.ProtoReflect.Descriptor instead.
-func (*URLResp) Descriptor() ([]byte, []int) {
-	return file_protos_url_service_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *URLResp) GetRedirectUrl() string {
-	if x != nil {
-		return x.RedirectUrl
-	}
-	return ""
-}
-
-var File_protos_url_service_proto protoreflect.FileDescriptor
-
-var file_protos_url_service_proto_rawDesc = []byte{
-	0x0a, 0x18, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x2f, 0x75, 0x72, 0x6c, 0x5f, 0x73, 0x65, 0x72,
-	0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x27, 0x0a, 0x0b, 0x53, 0x68,
-	0x6f, 0x72, 0x74, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x71, 0x12, 0x18, 0x0a, 0x07, 0x4c, 0x6f, 0x6e,
-	0x67, 0x55, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x4c, 0x6f, 0x6e, 0x67,
-	0x55, 0x72, 0x6c, 0x22, 0x2a, 0x0a, 0x0c, 0x53, 0x68, 0x6f, 0x72, 0x74, 0x55, 0x52, 0x4c, 0x52,
-	0x65, 0x73, 0x70, 0x12, 0x1a, 0x0a, 0x08, 0x53, 0x68, 0x6f, 0x72, 0x74, 0x55, 0x72, 0x6c, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x53, 0x68, 0x6f, 0x72, 0x74, 0x55, 0x72, 0x6c, 0x22,
-	0x22, 0x0a, 0x06, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x71, 0x12, 0x18, 0x0a, 0x07, 0x55, 0x72, 0x6c,
-	0x43, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x55, 0x72, 0x6c, 0x43,
-	0x6f, 0x64, 0x65, 0x22, 0x2b, 0x0a, 0x07, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x73, 0x70, 0x12, 0x20,
-	0x0a, 0x0b, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x55, 0x72, 0x6c, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0b, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x55, 0x72, 0x6c,
-	0x32, 0x52, 0x0a, 0x09, 0x53, 0x68, 0x6f, 0x72, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x12, 0x28, 0x0a,
-	0x09, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x55, 0x52, 0x4c, 0x12, 0x0c, 0x2e, 0x53, 0x68, 0x6f,
-	0x72, 0x74, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x71, 0x1a, 0x0d, 0x2e, 0x53, 0x68, 0x6f, 0x72, 0x74,
-	0x55, 0x52, 0x4c, 0x52, 0x65, 0x73, 0x70, 0x12, 0x1b, 0x0a, 0x06, 0x47, 0x65, 0x74, 0x55, 0x52,
-	0x4c, 0x12, 0x07, 0x2e, 0x55, 0x52, 0x4c, 0x52, 0x65, 0x71, 0x1a, 0x08, 0x2e, 0x55, 0x52, 0x4c,
-	0x52, 0x65, 0x73, 0x70, 0x42, 0x08, 0x5a, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_url_service_proto_rawDesc = []byte{
+	0x0a, 0x11, 0x75, 0x72, 0x6c, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x22, 0x31, 0x0a, 0x03, 0x55, 0x52, 0x4c, 0x12, 0x18, 0x0a, 0x07, 0x4c, 0x6f,
+	0x6e, 0x67, 0x55, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x4c, 0x6f, 0x6e,
+	0x67, 0x55, 0x72, 0x6c, 0x12, 0x10, 0x0a, 0x03, 0x54, 0x54, 0x4c, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x54, 0x54, 0x4c, 0x22, 0x1a, 0x0a, 0x04, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x12,
+	0x0a, 0x04, 0x43, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x43, 0x6f,
+	0x64, 0x65, 0x32, 0x3c, 0x0a, 0x09, 0x53, 0x68, 0x6f, 0x72, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x12,
+	0x18, 0x0a, 0x09, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x55, 0x52, 0x4c, 0x12, 0x04, 0x2e, 0x55,
+	0x52, 0x4c, 0x1a, 0x05, 0x2e, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x15, 0x0a, 0x06, 0x47, 0x65, 0x74,
+	0x55, 0x52, 0x4c, 0x12, 0x05, 0x2e, 0x43, 0x6f, 0x64, 0x65, 0x1a, 0x04, 0x2e, 0x55, 0x52, 0x4c,
+	0x42, 0x08, 0x5a, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
-	file_protos_url_service_proto_rawDescOnce sync.Once
-	file_protos_url_service_proto_rawDescData = file_protos_url_service_proto_rawDesc
+	file_url_service_proto_rawDescOnce sync.Once
+	file_url_service_proto_rawDescData = file_url_service_proto_rawDesc
 )
 
-func file_protos_url_service_proto_rawDescGZIP() []byte {
-	file_protos_url_service_proto_rawDescOnce.Do(func() {
-		file_protos_url_service_proto_rawDescData = protoimpl.X.CompressGZIP(file_protos_url_service_proto_rawDescData)
+func file_url_service_proto_rawDescGZIP() []byte {
+	file_url_service_proto_rawDescOnce.Do(func() {
+		file_url_service_proto_rawDescData = protoimpl.X.CompressGZIP(file_url_service_proto_rawDescData)
 	})
-	return file_protos_url_service_proto_rawDescData
+	return file_url_service_proto_rawDescData
 }
 
-var file_protos_url_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_protos_url_service_proto_goTypes = []interface{}{
-	(*ShortURLReq)(nil),  // 0: ShortURLReq
-	(*ShortURLResp)(nil), // 1: ShortURLResp
-	(*URLReq)(nil),       // 2: URLReq
-	(*URLResp)(nil),      // 3: URLResp
+var file_url_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_url_service_proto_goTypes = []interface{}{
+	(*URL)(nil),  // 0: URL
+	(*Code)(nil), // 1: Code
 }
-var file_protos_url_service_proto_depIdxs = []int32{
-	0, // 0: Shortener.CreateURL:input_type -> ShortURLReq
-	2, // 1: Shortener.GetURL:input_type -> URLReq
-	1, // 2: Shortener.CreateURL:output_type -> ShortURLResp
-	3, // 3: Shortener.GetURL:output_type -> URLResp
+var file_url_service_proto_depIdxs = []int32{
+	0, // 0: Shortener.CreateURL:input_type -> URL
+	1, // 1: Shortener.GetURL:input_type -> Code
+	1, // 2: Shortener.CreateURL:output_type -> Code
+	0, // 3: Shortener.GetURL:output_type -> URL
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -279,14 +184,14 @@ var file_protos_url_service_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_protos_url_service_proto_init() }
-func file_protos_url_service_proto_init() {
-	if File_protos_url_service_proto != nil {
+func init() { file_url_service_proto_init() }
+func file_url_service_proto_init() {
+	if File_url_service_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_protos_url_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ShortURLReq); i {
+		file_url_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*URL); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -297,32 +202,8 @@ func file_protos_url_service_proto_init() {
 				return nil
 			}
 		}
-		file_protos_url_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ShortURLResp); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_protos_url_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*URLReq); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_protos_url_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*URLResp); i {
+		file_url_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Code); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -338,20 +219,20 @@ func file_protos_url_service_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_protos_url_service_proto_rawDesc,
+			RawDescriptor: file_url_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_protos_url_service_proto_goTypes,
-		DependencyIndexes: file_protos_url_service_proto_depIdxs,
-		MessageInfos:      file_protos_url_service_proto_msgTypes,
+		GoTypes:           file_url_service_proto_goTypes,
+		DependencyIndexes: file_url_service_proto_depIdxs,
+		MessageInfos:      file_url_service_proto_msgTypes,
 	}.Build()
-	File_protos_url_service_proto = out.File
-	file_protos_url_service_proto_rawDesc = nil
-	file_protos_url_service_proto_goTypes = nil
-	file_protos_url_service_proto_depIdxs = nil
+	File_url_service_proto = out.File
+	file_url_service_proto_rawDesc = nil
+	file_url_service_proto_goTypes = nil
+	file_url_service_proto_depIdxs = nil
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -366,8 +247,8 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ShortenerClient interface {
-	CreateURL(ctx context.Context, in *ShortURLReq, opts ...grpc.CallOption) (*ShortURLResp, error)
-	GetURL(ctx context.Context, in *URLReq, opts ...grpc.CallOption) (*URLResp, error)
+	CreateURL(ctx context.Context, in *URL, opts ...grpc.CallOption) (*Code, error)
+	GetURL(ctx context.Context, in *Code, opts ...grpc.CallOption) (*URL, error)
 }
 
 type shortenerClient struct {
@@ -378,8 +259,8 @@ func NewShortenerClient(cc grpc.ClientConnInterface) ShortenerClient {
 	return &shortenerClient{cc}
 }
 
-func (c *shortenerClient) CreateURL(ctx context.Context, in *ShortURLReq, opts ...grpc.CallOption) (*ShortURLResp, error) {
-	out := new(ShortURLResp)
+func (c *shortenerClient) CreateURL(ctx context.Context, in *URL, opts ...grpc.CallOption) (*Code, error) {
+	out := new(Code)
 	err := c.cc.Invoke(ctx, "/Shortener/CreateURL", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -387,8 +268,8 @@ func (c *shortenerClient) CreateURL(ctx context.Context, in *ShortURLReq, opts .
 	return out, nil
 }
 
-func (c *shortenerClient) GetURL(ctx context.Context, in *URLReq, opts ...grpc.CallOption) (*URLResp, error) {
-	out := new(URLResp)
+func (c *shortenerClient) GetURL(ctx context.Context, in *Code, opts ...grpc.CallOption) (*URL, error) {
+	out := new(URL)
 	err := c.cc.Invoke(ctx, "/Shortener/GetURL", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -398,18 +279,18 @@ func (c *shortenerClient) GetURL(ctx context.Context, in *URLReq, opts ...grpc.C
 
 // ShortenerServer is the server API for Shortener service.
 type ShortenerServer interface {
-	CreateURL(context.Context, *ShortURLReq) (*ShortURLResp, error)
-	GetURL(context.Context, *URLReq) (*URLResp, error)
+	CreateURL(context.Context, *URL) (*Code, error)
+	GetURL(context.Context, *Code) (*URL, error)
 }
 
 // UnimplementedShortenerServer can be embedded to have forward compatible implementations.
 type UnimplementedShortenerServer struct {
 }
 
-func (*UnimplementedShortenerServer) CreateURL(context.Context, *ShortURLReq) (*ShortURLResp, error) {
+func (*UnimplementedShortenerServer) CreateURL(context.Context, *URL) (*Code, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateURL not implemented")
 }
-func (*UnimplementedShortenerServer) GetURL(context.Context, *URLReq) (*URLResp, error) {
+func (*UnimplementedShortenerServer) GetURL(context.Context, *Code) (*URL, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetURL not implemented")
 }
 
@@ -418,7 +299,7 @@ func RegisterShortenerServer(s *grpc.Server, srv ShortenerServer) {
 }
 
 func _Shortener_CreateURL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ShortURLReq)
+	in := new(URL)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -430,13 +311,13 @@ func _Shortener_CreateURL_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/Shortener/CreateURL",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShortenerServer).CreateURL(ctx, req.(*ShortURLReq))
+		return srv.(ShortenerServer).CreateURL(ctx, req.(*URL))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Shortener_GetURL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(URLReq)
+	in := new(Code)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -448,7 +329,7 @@ func _Shortener_GetURL_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/Shortener/GetURL",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ShortenerServer).GetURL(ctx, req.(*URLReq))
+		return srv.(ShortenerServer).GetURL(ctx, req.(*Code))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -467,5 +348,5 @@ var _Shortener_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "protos/url_service.proto",
+	Metadata: "url_service.proto",
 }

@@ -14,7 +14,7 @@ const (
 	port      string = ":8081"
 	htmlDir   string = "./ui/templates"
 	staticDir string = "./ui/static"
-	version   string = "1.0.1"
+	version   string = "1.0.2"
 )
 
 func main() {

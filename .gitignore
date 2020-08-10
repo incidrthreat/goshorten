@@ -6,7 +6,6 @@ frontend-go/.cache
 frontend-go/dist
 
 # Client/Server Certs
-backend/server.key
-backend/server.crt
-backend/server.csr
-frontend-go/server.crt
+backend/server.*
+frontend-go/server.*
+collision_tests/server.*
