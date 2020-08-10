@@ -17,7 +17,7 @@ service Shortener {
 
 message URL {
     string LongUrl = 1;
-    string TTL = 2;
+    int64 TTL = 2;
 }
 
 message Code {
