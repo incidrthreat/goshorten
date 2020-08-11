@@ -3,6 +3,7 @@ package main
 import (
 	"net"
 	"os"
+	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/incidrthreat/goshorten/backend/data"
@@ -13,11 +14,25 @@ import (
 	"github.com/incidrthreat/goshorten/backend/shortener"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 )
 
 const (
-	version string = "1.0.3"
+	version string = "1.0.4"
 )
+
+var kaEP = keepalive.EnforcementPolicy{
+	MinTime:             5 * time.Second,
+	PermitWithoutStream: true,
+}
+
+var kaSP = keepalive.ServerParameters{
+	MaxConnectionIdle:     15 * time.Second,
+	MaxConnectionAge:      30 * time.Second,
+	MaxConnectionAgeGrace: 5 * time.Second,
+	Time:                  5 * time.Second,
+	Timeout:               1 * time.Second,
+}
 
 func main() {
 	log := hclog.Default()
@@ -52,7 +67,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	gs := grpc.NewServer(grpc.Creds(serverCert))
+	gs := grpc.NewServer(grpc.Creds(serverCert), grpc.KeepaliveEnforcementPolicy(kaEP), grpc.KeepaliveParams(kaSP))
 	// reflection.Register(gs) // Remove before production
 
 	pb.RegisterShortenerServer(gs, &shortener.CreateServer{
