@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"net/http"
+	"time"
+
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/incidrthreat/goshorten/frontend-go/webapp"
@@ -14,7 +17,7 @@ const (
 	port      string = ":8081"
 	htmlDir   string = "./ui/templates"
 	staticDir string = "./ui/static"
-	version   string = "1.0.2"
+	version   string = "1.0.3"
 )
 
 func main() {
@@ -25,7 +28,13 @@ func main() {
 		log.Error("Failed to create Certificate", "Error", err)
 	}
 
-	conn, err := grpc.DialContext(context.Background(), "grpcbackend:9000", grpc.WithTransportCredentials(clientCert))
+	var kaCP = keepalive.ClientParameters{
+		Time:                15 * time.Second,
+		Timeout:             5 * time.Second,
+		PermitWithoutStream: true,
+	}
+
+	conn, err := grpc.DialContext(context.Background(), "grpcbackend:9000", grpc.WithTransportCredentials(clientCert), grpc.WithKeepaliveParams(kaCP))
 	// TODO: Better error handling and keep-alive
 	if err != nil {
 		log.Error("Failed to connect to gRPC Server", "Error", err)
