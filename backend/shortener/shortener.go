@@ -21,6 +21,7 @@ var log = hclog.Default()
 func (c *CreateServer) CreateURL(ctx context.Context, req *pb.URL) (*pb.Code, error) {
 	url := req.GetLongUrl()
 	ttl := req.GetTTL()
+	stats := req.GetStats()
 
 	switch ttl {
 	case 300, 86400, 172800:
@@ -31,7 +32,7 @@ func (c *CreateServer) CreateURL(ctx context.Context, req *pb.URL) (*pb.Code, er
 
 		log.Info("CreateURL Req", "Shorten Request", hclog.Fmt("%s", url))
 
-		code, err := c.Store.Save(url, ttl)
+		code, err := c.Store.Save(url, ttl, stats)
 		if err != nil {
 			log.Error("Redis Save:", "Unable to save", err)
 			return &pb.Code{}, errors.New("Unable to store URL")
@@ -68,5 +69,24 @@ func (c *CreateServer) GetURL(ctx context.Context, req *pb.Code) (*pb.URL, error
 	}
 
 	return resp, nil
+}
 
+// GetStats ...
+func (c *CreateServer) GetStats(ctx context.Context, req *pb.Code) (*pb.Stats, error) {
+	code := req.GetCode()
+	if code == "" {
+		log.Error("GetStats", "Error", "No Code Reqested")
+		return &pb.Stats{}, errors.New("No Code Requested")
+	}
+
+	stats, err := c.Store.Stats(code)
+	if err != nil {
+		log.Error("Redis Stats:", "Unable to Load Stats", err)
+		return &pb.Stats{}, errors.New("Code expired or not in storage")
+	}
+
+	resp := &pb.Stats{
+		Stats: stats,
+	}
+	return resp, nil
 }
