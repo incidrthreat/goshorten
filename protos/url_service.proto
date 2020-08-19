@@ -13,13 +13,19 @@ option go_package = "protos";
 service Shortener {
     rpc CreateURL(URL) returns (Code);
     rpc GetURL(Code) returns (URL);
+    rpc GetStats(Code) returns (Stats);
 }
 
 message URL {
     string LongUrl = 1;
     int64 TTL = 2;
+    string Stats = 3;
 }
 
 message Code {
     string Code = 1;
+}
+
+message Stats {
+    string Stats = 1;
 }
