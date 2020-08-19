@@ -1,0 +1,10 @@
+{{ define "page-title"}} URL Stats {{ end }}
+{{ define "page-body" }}
+{{ with .Stats }}
+    <h1>URL: {{ .URL }}</h1>
+    <h1>Code: {{ .Code }}</h1>
+    <h1>Code created on: {{ .CreatedAt }}</h1>
+    <h1>Last Accessed on: {{ .LastAccessed }}</h1>
+    <h1>Clicks: {{ .Clicks }}</h1>
+{{ end }}
+{{ end }}
