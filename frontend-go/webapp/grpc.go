@@ -2,9 +2,13 @@ package webapp
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -33,14 +37,24 @@ func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	stats := Statistics{
+		CreatedAt: time.Now().Format("Mon, 02 Jan 2006 15:04:05 MST"),
+		Clicks:    "0",
+	}
+
+	out, err := json.Marshal(stats)
+	if err != nil {
+		fmt.Printf("JSON error: %v", err)
+	}
+
 	resp, err := c.CreateURL(context.Background(), &pb.URL{
 		LongUrl: r.PostFormValue("url"),
 		TTL:     ttl64,
+		Stats:   string(out),
 	})
 
 	if err != nil {
 		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "Unable to store URL"})
-		return
 	}
 
 	app.RenderHTML(w, r, "index.html", &HTMLData{Data: resp.Code})
@@ -48,14 +62,8 @@ func (app *App) GetCode(w http.ResponseWriter, r *http.Request) {
 
 // GetURL ...
 func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
-	validCode := regexp.MustCompile(`^[a-zA-Z0-9]{3,6}$`)
 	vars := mux.Vars(r)
 	code := vars["code"]
-
-	if !validCode.MatchString(code) || code == "code" {
-		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "Not valid URL Code"})
-		return
-	}
 
 	c := pb.NewShortenerClient(app.Conn)
 	resp, err := c.GetURL(context.Background(), &pb.Code{
@@ -74,4 +82,36 @@ func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Redirect(w, r, resp.LongUrl, 308)
 	}
+}
+
+// GetStats ...
+func (app *App) GetStats(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	code := vars["code"]
+
+	c := pb.NewShortenerClient(app.Conn)
+	resp, err := c.GetStats(context.Background(), &pb.Code{
+		Code: strings.TrimSuffix(code, "+"),
+	})
+
+	var stats Statistics
+	err = json.Unmarshal([]byte(resp.Stats), &stats)
+	if err != nil {
+		fmt.Printf("JSON Unmarshal Error: %v", err)
+	}
+
+	if stats.CreatedAt == "" {
+		app.RenderHTML(w, r, "index.html", &HTMLData{Error: "URL Expired without Statistics"})
+		return
+	}
+
+	app.RenderHTML(w, r, "stats.html", &HTMLData{
+		Stats: Statistics{
+			URL:          stats.URL,
+			Code:         stats.Code,
+			CreatedAt:    stats.CreatedAt,
+			Clicks:       stats.Clicks,
+			LastAccessed: stats.LastAccessed,
+		},
+	})
 }

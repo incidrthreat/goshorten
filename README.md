@@ -27,6 +27,8 @@ ___________________________
 
 6. open your favorite browser to `localhost:8081`
 
+Note: To view statistics of your code, append a `+` to the end of the uri.
+
 ___________________________
 ## Screenshots
 #### Home Page
@@ -35,6 +37,8 @@ ___________________________
 ![Success!](/screenshots/successfulcodeV1.0.2.png)
 #### Invalid Code retreival
 ![Invalid](/screenshots/invalidcodeV1.0.2.png)
+#### Statistics of generated code
+![Invalid](/screenshots/successfulStatsV1.0.4.PNG)
 __________________________
 ## Contributing
 

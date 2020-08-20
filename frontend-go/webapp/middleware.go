@@ -6,12 +6,6 @@ import (
 	"path/filepath"
 )
 
-// HTMLData passing data to and from html
-type HTMLData struct {
-	Data  string
-	Error string
-}
-
 // RenderHTML handles data
 func (app *App) RenderHTML(w http.ResponseWriter, r *http.Request, page string, data *HTMLData) {
 	files := []string{

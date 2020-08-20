@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 None yet.
 
+## [1.0.5] - 2020-08-19
+### Added 
+- gRPC server GetStats message to retrieve Statistics from Redis 
+### Edited
+- CreateURL now stores the initial stats data
+
 ## [1.0.4] - 2020-08-10
 ### Added
 - Converted TTL from string to int64
