@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 None yet.
 
+## [1.0.4] - 2020-08-19
+### Added
+- gRPC pull and save of code statistics
+- Statistics page viewable with a `+` suffix in the URI
+
 ## [1.0.3] - 2020-08-10
 ### Added
 - Converted TTL from string to int64
