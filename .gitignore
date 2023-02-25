@@ -1,7 +1,7 @@
-# Backend ignore
+# Backend
 config.json
 
-# Frontend ignore
+# Frontend
 frontend-go/.cache
 frontend-go/dist
 
@@ -9,3 +9,6 @@ frontend-go/dist
 backend/server.*
 frontend-go/server.*
 collision_tests/server.*
+
+# protos
+protos\url_service.proto
