@@ -35,6 +35,8 @@ Either container runtime works:
 
 All env vars have sensible defaults and work out of the box for local development. **None are mandatory.** For production, you should change the four security-sensitive values (marked with ⚠ below).
 
+> **Container config note:** The backend image copies `backend/config.json.example` to `/app/config.json` at build time. Runtime values should be provided via environment variables (listed below), which override file-based settings.
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GOSHORTEN_REDIS_HOST` | `redis:6379` | Redis host:port |
@@ -131,175 +133,85 @@ ___________________________
 
 * *Initial* - [Incidrthreat](https://twitter.com/incidrthreat)
 
-Update Todos
-
-Phase 1: Foundation — Database & Storage Layer
-
-1.1 Design Postgres schema (urls, clicks, api_keys, tags, users)
-
-1.2 Add Postgres service to docker-compose.yml
-
-1.3 Integrate a Go migration tool (golang-migrate or goose)
-
-1.4 Write initial migration files (up/down)
-
-1.5 Build Postgres repository layer (CRUD for URLs, clicks, tags, users)
-
-1.6 Refactor Redis to cache-only role (read-through cache for redirects)
-
-1.7 Implement cache invalidation strategy (write-through on create/update/delete)
-
-Phase 2: Core Feature Parity with Shlink
-
-2.1 Custom slugs / vanity URLs (user-provided short codes)
-
-2.2 Configurable TTL (arbitrary expiration or no-expiry)
-
-2.3 URL validation and normalization (scheme, trailing slash, IDN)
-
-2.4 Crawlable/non-crawlable toggle (X-Robots-Tag, redirect type 301 vs 302)
-
-2.5 Max visits limit (auto-disable after N clicks)
-
-2.6 URL update/edit support (change target URL without changing code)
-
-2.7 URL soft-delete and disable/enable toggle
-
-2.8 QR code generation for short URLs
-
-2.9 Multi-domain support (resolve different domains to different base URLs)
-
-Phase 3: Authentication & Authorization
-
-3.1 API key model (generate, revoke, scope per key)
-
-3.2 gRPC interceptor for API key auth
-
-3.3 Role-based access (admin vs regular user)
-
-3.4 Rate limiting per API key (token bucket in Redis)
-
-Phase 4: REST API Gateway
-
-4.1 Add grpc-gateway annotations to proto definitions
-
-4.2 Generate REST reverse proxy from protos
-
-4.3 REST endpoints: POST /short-urls, GET /short-urls, GET /short-urls/{code}, PATCH, DELETE
-
-4.4 REST endpoints: GET /short-urls/{code}/visits (analytics)
-
-4.5 REST endpoint: GET /short-urls/{code}/qr-code
-
-4.6 Pagination, filtering, and sorting on list endpoints
-
-4.7 OpenAPI/Swagger spec generation from protos
-
-4.8 API versioning strategy (v1 prefix)
-
-Phase 5: Analytics & Visit Tracking
-
-5.1 Capture full visit data (referrer, user-agent, IP, timestamp)
-
-5.2 GeoIP lookup (MaxMind GeoLite2 — country, city)
-
-5.3 Device/browser/OS parsing from user-agent
-
-5.4 Async visit logging (channel/worker to avoid blocking redirects)
-
-5.5 Aggregation queries (visits by day, by referrer, by country, by browser)
-
-5.6 Bot/crawler detection and filtering from stats
-
-5.7 Orphan visit tracking (visits to invalid/expired codes)
-
-Phase 6: Tag System
-
-6.1 Tag CRUD (create, rename, delete tags)
-
-6.2 Many-to-many URL-tag relationship
-
-6.3 Filter/search URLs by tag
-
-6.4 Tag-level aggregated stats
-
-Phase 7: Frontend Rebuild
-
-7.1 Replace Go templates with a modern SPA (React, Svelte, or HTMX)
-
-7.2 Dashboard: list all short URLs with search/filter/sort
-
-7.3 Analytics dashboard with charts (visits over time, geo map, top referrers)
-
-7.4 URL creation form (custom slug, TTL, tags, max visits, domain)
-
-7.5 API key management UI
-
-7.6 Settings/config page
-
-Phase 8: Infrastructure & Operations
-
-8.1 Structured JSON logging with log levels
-
-8.2 Health check endpoints (liveness + readiness)
-
-8.3 Prometheus metrics (request latency, cache hit/miss ratio, active URLs)
-
-8.4 Graceful shutdown (drain connections, flush writes)
-
-8.5 Configuration via env vars (12-factor app) alongside config file
-
-8.6 CI pipeline (lint, test, build, docker image)
-
-8.7 Dockerfile optimization (multi-stage, scratch/distroless base)
-
-Phase 9: Testing
-
-9.1 Unit tests for repository layer, code generation, validation
-
-9.2 Integration tests against real Postgres + Redis (testcontainers-go)
-
-9.3 gRPC endpoint tests (mock store, verify request/response)
-
-9.4 REST API end-to-end tests
-
-9.5 Load/benchmark tests for redirect path (vegeta or k6)
-
-Phase 10: Import & CLI
-
-10.1 Shlink-compatible import (read Shlink DB or API export)
-
-10.2 CSV/JSON bulk import
-
-10.3 CLI tool for admin operations (create URL, list, stats, manage keys)
+------------------------------
 Here's the full roadmap broken into 10 phases. The ordering is intentional — each phase builds on the one before it:
 
-Phase 1: Foundation (Database & Storage)
-Get Postgres in, migrate off Redis-as-primary. Everything else depends on this.
+### [X] Phase 1: Foundation (Database & Storage)
+ - 1.1 Design Postgres schema (urls, clicks, api_keys, tags, users)
+ - 1.2 Add Postgres service to docker-compose.yml
+ - 1.3 Integrate a Go migration tool (golang-migrate or goose)
+ - 1.4 Write initial migration files (up/down)
+ - 1.5 Build Postgres repository layer (CRUD for URLs, clicks, tags, users)
+ - 1.6 Refactor Redis to cache-only role (read-through cache for redirects)
+ - 1.7 Implement cache invalidation strategy (write-through on create/update/delete)
 
-Phase 2: Core Feature Parity
-The features Shlink users expect out of the box — custom slugs, flexible TTL, max visits, edit/disable URLs, QR codes, multi-domain.
+### [X] Phase 2: Core Feature Parity
+ - 2.1 Custom slugs / vanity URLs (user-provided short codes)
+ - 2.2 Configurable TTL (arbitrary expiration or no-expiry)
+ - 2.3 URL validation and normalization (scheme, trailing slash, IDN)
+ - 2.4 Crawlable/non-crawlable toggle (X-Robots-Tag, redirect type 301 vs 302)
+ - 2.5 Max visits limit (auto-disable after N clicks)
+ - 2.6 URL update/edit support (change target URL without changing code)
+ - 2.7 URL soft-delete and disable/enable toggle
+ - 2.8 QR code generation for short URLs
+ - 2.9 Multi-domain support (resolve different domains to different base URLs)
 
-Phase 3: Authentication & Authorization
-API keys, role-based access, rate limiting. Required before exposing a public API.
+### [X] Phase 3: Authentication & Authorization
+ - 3.1 API key model (generate, revoke, scope per key)
+ - 3.2 gRPC interceptor for API key auth
+ - 3.3 Role-based access (admin vs regular user)
+ - 3.4 Rate limiting per API key (token bucket in Redis)
 
-Phase 4: REST API Gateway
-Add grpc-gateway annotations to your existing protos to auto-generate a REST API. Include OpenAPI spec generation so consumers get docs for free.
+### [X] Phase 4: REST API Gateway
+ - 4.1 Add grpc-gateway annotations to proto definitions
+ - 4.2 Generate REST reverse proxy from protos
+ - 4.3 REST endpoints: POST /short-urls, GET /short-urls, GET /short-urls/{code}, PATCH, DELETE
+ - 4.4 REST endpoints: GET /short-urls/{code}/visits (analytics)
+ - 4.5 REST endpoint: GET /short-urls/{code}/qr-code
+ - 4.6 Pagination, filtering, and sorting on list endpoints
+ - 4.7 OpenAPI/Swagger spec generation from protos
+ - 4.8 API versioning strategy (v1 prefix)
 
-Phase 5: Analytics & Visit Tracking
-The big differentiator — full visit capture (referrer, geo, device), async logging so redirects stay fast, and aggregation queries in Postgres.
+### [X] Phase 5: Analytics & Visit Tracking
+ - 5.1 Capture full visit data (referrer, user-agent, IP, timestamp)
+ - 5.2 GeoIP lookup (MaxMind GeoLite2 — country, city)
+ - 5.3 Device/browser/OS parsing from user-agent
+ - 5.4 Async visit logging (channel/worker to avoid blocking redirects)
+ - 5.5 Aggregation queries (visits by day, by referrer, by country, by browser)
+ - 5.6 Bot/crawler detection and filtering from stats
+ - 5.7 Orphan visit tracking (visits to invalid/expired codes)
 
-Phase 6: Tag System
-Organize and filter URLs by tags, with tag-level aggregated stats.
+### [X] Phase 6: Tag System
+ - 6.1 Tag CRUD (create, rename, delete tags)
+ - 6.2 Many-to-many URL-tag relationship
+ - 6.3 Filter/search URLs by tag
+ - 6.4 Tag-level aggregated stats
 
-Phase 7: Frontend Rebuild
-Replace Bootstrap 4 templates with a proper SPA — dashboard, analytics charts, URL management, API key admin.
+### [X] Phase 7: Frontend Rebuild
+ - 7.1 Replace Go templates with a modern SPA (React, Svelte, or HTMX)
+ - 7.2 Dashboard: list all short URLs with search/filter/sort
+ - 7.3 Analytics dashboard with charts (visits over time, geo map, top referrers)
+ - 7.4 URL creation form (custom slug, TTL, tags, max visits, domain)
+ - 7.5 API key management UI
+ - 7.6 Settings/config page
 
-Phase 8: Infrastructure & Operations
-Health checks, Prometheus metrics, graceful shutdown, env-var config, CI pipeline, optimized Docker images.
+### [ ] Phase 8: Infrastructure & Operations
+ - 8.1 Structured JSON logging with log levels
+ - 8.2 Health check endpoints (liveness + readiness)
+ - 8.3 Prometheus metrics (request latency, cache hit/miss ratio, active URLs)
+ - 8.4 Graceful shutdown (drain connections, flush writes)
+ - 8.5 Configuration via env vars (12-factor app) alongside config file
+ - 8.6 CI pipeline (lint, test, build, docker image)
+ - 8.7 Dockerfile optimization (multi-stage, scratch/distroless base)
 
-Phase 9: Testing
-Unit, integration (testcontainers-go), gRPC, REST e2e, and load/benchmark tests on the redirect hot path.
+### [ ] Phase 9: Testing
+ - 9.1 Unit tests for repository layer, code generation, validation
+ - 9.2 Integration tests against real Postgres + Redis (testcontainers-go)
+ - 9.3 gRPC endpoint tests (mock store, verify request/response)
+ - 9.4 REST API end-to-end tests
+ - 9.5 Load/benchmark tests for redirect path (vegeta or k6)
 
-Phase 10: Import & CLI
-Shlink-compatible import for migration, bulk CSV/JSON import, and a CLI admin tool.
+### [ ] Phase 10: Import & CLI
+ - 10.1 Shlink-compatible import (read Shlink DB or API export)
+ - 10.2 CSV/JSON bulk import
+ - 10.3 CLI tool for admin operations (create URL, list, stats, manage keys)

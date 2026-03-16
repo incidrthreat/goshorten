@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	version string = "5.0.0"
+	version string = "0.5.0"
 )
 
 var kaEP = keepalive.EnforcementPolicy{
