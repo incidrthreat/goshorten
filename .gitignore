@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Environment / secrets
 .env
 *.env
@@ -12,14 +11,6 @@ config.json
 *.dylib
 grpc-client
 goshorten
-=======
-# Backend
-config.json
-
-# Frontend
-frontend-go/.cache
-frontend-go/dist
->>>>>>> 797f1982506fdaf09efb5df66e881cb734b998c5
 
 # Frontend build output
 frontend-go/dist/
@@ -38,7 +29,6 @@ backend/server.*
 frontend-go/server.*
 collision_tests/server.*
 
-<<<<<<< HEAD
 # IDE / editor
 .vscode/
 .idea/
@@ -51,13 +41,3 @@ collision_tests/server.*
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Generated protobuf (regenerated from protos/)
-backend/pb/*.pb.go
-backend/pb/*.pb.gw.go
-backend/pb/*.swagger.json
-frontend-go/pb/*.pb.go
-=======
-# protos
-protos\url_service.proto
->>>>>>> 797f1982506fdaf09efb5df66e881cb734b998c5
