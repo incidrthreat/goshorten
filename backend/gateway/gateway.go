@@ -2,9 +2,11 @@ package gateway
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hashicorp/go-hclog"
@@ -23,6 +25,9 @@ type Config struct {
 	GRPCAddr string
 	// SwaggerJSON is the path to the OpenAPI spec file to serve.
 	SwaggerJSON string
+	// ReadyCheckers are named functions called by /readyz. A non-nil error
+	// from any checker causes the endpoint to return 503.
+	ReadyCheckers map[string]func(context.Context) error
 }
 
 // Run starts the REST gateway HTTP server.
@@ -55,11 +60,14 @@ func Run(ctx context.Context, cfg Config) error {
 			http.ServeFile(w, r, cfg.SwaggerJSON)
 		})
 	}
-	// Health check
+	// Liveness check — always 200 if the process is up
 	httpMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
+	// Readiness check — 200 only when all dependencies are reachable
+	httpMux.HandleFunc("/readyz", readyzHandler(cfg.ReadyCheckers))
 	// All other requests go to the grpc-gateway mux
 	httpMux.Handle("/", handler)
 
@@ -88,6 +96,39 @@ func customHeaderMatcher(key string) (string, bool) {
 		return "authorization", true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
+	}
+}
+
+// readyzHandler returns an HTTP handler that checks all named ready functions.
+// It responds with JSON: {"status":"ok"} on 200 or {"status":"degraded","checks":{...}} on 503.
+func readyzHandler(checkers map[string]func(context.Context) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+
+		type result struct {
+			Status string `json:"status"`
+			Error  string `json:"error,omitempty"`
+		}
+		checks := make(map[string]result, len(checkers))
+		allOK := true
+		for name, fn := range checkers {
+			if err := fn(ctx); err != nil {
+				checks[name] = result{Status: "fail", Error: err.Error()}
+				allOK = false
+			} else {
+				checks[name] = result{Status: "ok"}
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if allOK {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+			return
+		}
+		w.WriteHeader(http.StatusServiceUnavailable)
+		json.NewEncoder(w).Encode(map[string]interface{}{"status": "degraded", "checks": checks})
 	}
 }
 
