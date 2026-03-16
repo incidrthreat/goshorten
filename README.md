@@ -110,6 +110,8 @@ Hardcode values in the `environment:` block of each service. Simple but not reco
 
 Note: To view statistics of a code in the legacy UI, append a `+` to the end of the URI.
 
+Note: To view statistics of your code, append a `+` to the end of the uri.
+
 ___________________________
 ## Screenshots
 #### Home Page
