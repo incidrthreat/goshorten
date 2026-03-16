@@ -8,8 +8,15 @@ services:
             - 8080:8080
         environment:
             - GOSHORTEN_REDIS_HOST=redis:6379
+            - GOSHORTEN_REDIS_PASS=mysecretpassword
             - GOSHORTEN_POSTGRES_HOST=postgres
-            - GOSHORTEN_GRPC_HOST=grpcbackend:9000
+            - GOSHORTEN_POSTGRES_PORT=5432
+            - GOSHORTEN_POSTGRES_USER=goshorten
+            - GOSHORTEN_POSTGRES_PASSWORD=goshorten_secret
+            - GOSHORTEN_POSTGRES_DB=goshorten
+            - GOSHORTEN_GRPC_HOST=:9000
+            - GOSHORTEN_GATEWAY_ADDR=:8080
+            - GOSHORTEN_ADMIN_PASSWORD=admin
         depends_on:
             redis:
                 condition: service_healthy

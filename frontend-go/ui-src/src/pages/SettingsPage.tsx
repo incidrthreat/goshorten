@@ -92,7 +92,7 @@ export default function SettingsPage({ user }: SettingsProps) {
       {/* Version */}
       <div className="flex items-center gap-2 text-xs text-gray-400">
         <Info className="w-3.5 h-3.5" />
-        GoShorten v5.0.0 &middot; Phase 7 Frontend
+        GoShorten v0.5.0 &middot; Phase 7 Frontend
       </div>
     </div>
   )

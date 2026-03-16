@@ -19,7 +19,7 @@ WORKDIR /app
 COPY --from=builder /app/grpc-server .
 COPY --from=builder /app/migrations/ ./migrations/
 COPY --from=builder /app/pb/url_service.swagger.json ./pb/
-COPY --from=builder /app/config.json .
+COPY --from=builder /app/config.json.example ./config.json
 
 EXPOSE 9000 8080
 
