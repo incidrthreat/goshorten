@@ -64,7 +64,7 @@ func Run(ctx context.Context, cfg Config) error {
 	httpMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 	// Readiness check — 200 only when all dependencies are reachable
 	httpMux.HandleFunc("/readyz", readyzHandler(cfg.ReadyCheckers))
@@ -80,7 +80,9 @@ func Run(ctx context.Context, cfg Config) error {
 
 	go func() {
 		<-ctx.Done()
-		server.Shutdown(context.Background())
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Error("REST Gateway shutdown error", "error", err)
+		}
 	}()
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -124,11 +126,11 @@ func readyzHandler(checkers map[string]func(context.Context) error) http.Handler
 		w.Header().Set("Content-Type", "application/json")
 		if allOK {
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 			return
 		}
 		w.WriteHeader(http.StatusServiceUnavailable)
-		json.NewEncoder(w).Encode(map[string]interface{}{"status": "degraded", "checks": checks})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"status": "degraded", "checks": checks})
 	}
 }
 
