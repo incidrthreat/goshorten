@@ -34,7 +34,7 @@ func (app *App) Routes() http.Handler {
 	// 2. Health check (frontend)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok"))
 	})
 
 	// 3. Everything else: short-code redirect or SPA

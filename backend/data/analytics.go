@@ -22,7 +22,6 @@ func (a *AnalyticsStore) GetVisitSummary(urlID int64, since *time.Time, excludeB
 	if since != nil {
 		where += fmt.Sprintf(" AND clicked_at >= $%d", argIdx)
 		args = append(args, *since)
-		argIdx++
 	}
 	if excludeBots {
 		where += " AND is_bot = FALSE"
@@ -98,7 +97,6 @@ func (a *AnalyticsStore) GetVisitsByField(urlID int64, field string, since *time
 	if since != nil {
 		where += fmt.Sprintf(" AND clicked_at >= $%d", argIdx)
 		args = append(args, *since)
-		argIdx++
 	}
 	if excludeBots {
 		where += " AND is_bot = FALSE"
