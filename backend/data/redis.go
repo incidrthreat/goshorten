@@ -123,6 +123,29 @@ func (r Redis) Stats(code string) (string, error) {
 	return string(statsJSON), nil
 }
 
+// --- Phase 2 stubs (Redis is cache-only, these are never called directly) ---
+
+func (r *Redis) Create(params URLCreateParams) (*URLRecord, error) {
+	return nil, errors.New("not supported on Redis store")
+}
+func (r *Redis) Get(code string) (*URLRecord, error) {
+	return nil, errors.New("not supported on Redis store")
+}
+func (r *Redis) Update(params URLUpdateParams) (*URLRecord, error) {
+	return nil, errors.New("not supported on Redis store")
+}
+func (r *Redis) Delete(code string) error {
+	return errors.New("not supported on Redis store")
+}
+func (r *Redis) List(params URLListParams) (*URLListResult, error) {
+	return nil, errors.New("not supported on Redis store")
+}
+
+// --- Phase 5 stubs ---
+
+func (r *Redis) SetVisitLogger(vl *VisitLogger) {}
+func (r *Redis) RecordVisit(code string, ipAddress, userAgent, referer string) {}
+
 // generates a unqiue code and checks if valid
 func generate(c *redis.Client, n int) (string, error) {
 	code := GenCode(n)

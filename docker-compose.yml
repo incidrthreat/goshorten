@@ -1,28 +1,66 @@
-version: "3.4"
-services: 
+services:
     grpcbackend:
         hostname: grpcbackend
-        build: backend/.
-        depends_on: 
-            - redis
+        build:
+            context: backend/.
+            dockerfile: Containerfile
+        ports:
+            - 8080:8080
+        environment:
+            - GOSHORTEN_REDIS_HOST=redis:6379
+            - GOSHORTEN_POSTGRES_HOST=postgres
+            - GOSHORTEN_GRPC_HOST=grpcbackend:9000
+        depends_on:
+            redis:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+            interval: 10s
+            timeout: 3s
+            retries: 5
 
     redis:
         image: "redis:alpine"
-        privileged: true
         command: >
-            sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled &&
-            echo never > /sys/kernel/mm/transparent_hugepage/defrag &&
-            redis-server --requirepass mysecretpassword"
-        sysctls:
-            - net.core.somaxconn=1024
+            redis-server --requirepass mysecretpassword
+            --tcp-backlog 1024
+        healthcheck:
+            test: ["CMD", "redis-cli", "-a", "mysecretpassword", "ping"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
 
+    postgres:
+        image: "postgres:16-alpine"
+        hostname: postgres
+        environment:
+            POSTGRES_USER: goshorten
+            POSTGRES_PASSWORD: goshorten_secret
+            POSTGRES_DB: goshorten
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U goshorten"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
 
-        
     frontend:
         hostname: frontend
-        build: frontend-go/.
+        build:
+            context: frontend-go/.
+            dockerfile: Containerfile
         dns_search: .
         ports:
             - 8081:8081
-        depends_on: 
-            - grpcbackend
+        environment:
+            - GOSHORTEN_BACKEND_URL=http://grpcbackend:8080
+            - GOSHORTEN_GRPC_ADDR=grpcbackend:9000
+        depends_on:
+            grpcbackend:
+                condition: service_healthy
+
+volumes:
+    pgdata:

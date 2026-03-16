@@ -1,9 +1,23 @@
 {
-    "redis_conf":{
-        "host":"redis:6379",
-        "pass":"P@ssword",
-        "logical_database":0,
-        "char_floor":3
+    "redis_conf": {
+        "host": "redis:6379",
+        "pass": "P@ssword",
+        "logical_database": 0,
+        "char_floor": 3
+    },
+    "postgres_conf": {
+        "host": "postgres",
+        "port": 5432,
+        "user": "goshorten",
+        "password": "P@ssword",
+        "dbname": "goshorten",
+        "sslmode": "disable"
+    },
+    "auth_conf": {
+        "jwt_secret": "CHANGE_ME_RANDOM_SECRET",
+        "admin_email": "admin@goshorten.local",
+        "admin_password": "CHANGE_ME",
+        "token_expiry_hours": 24
     },
     "grpc_host": ":9000"
 }

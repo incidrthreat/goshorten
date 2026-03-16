@@ -1,11 +1,49 @@
-# Backend ignore
+# Environment / secrets
+.env
+*.env
 config.json
 
-# Frontend ignore
-frontend-go/.cache
-frontend-go/dist
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+grpc-client
+goshorten
 
-# Client/Server Certs
+# Frontend build output
+frontend-go/dist/
+frontend-go/.cache/
+
+# Node
+frontend-go/ui-src/node_modules/
+frontend-go/ui-src/package-lock.json
+
+# TLS certs / keys
+*.crt
+*.csr
+*.key
+*.pem
 backend/server.*
 frontend-go/server.*
 collision_tests/server.*
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated protobuf (regenerated from protos/)
+backend/pb/*.pb.go
+backend/pb/*.pb.gw.go
+backend/pb/*.swagger.json
+frontend-go/pb/*.pb.go
