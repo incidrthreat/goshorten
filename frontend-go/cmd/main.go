@@ -54,7 +54,7 @@ func main() {
 		PermitWithoutStream: true,
 	}
 
-	conn, err := grpc.DialContext(context.Background(), grpcAddr,
+	conn, err := grpc.NewClient(grpcAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithKeepaliveParams(kaCP),
 	)
