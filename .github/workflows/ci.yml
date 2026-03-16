@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master]
+
+jobs:
+  backend:
+    name: Backend (lint · build · docker)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          install-mode: goinstall
+          working-directory: backend
+
+      - name: Build
+        run: CGO_ENABLED=0 go build -ldflags="-s -w" -o /dev/null .
+
+      - name: Test
+        run: go test ./...
+
+      - name: Docker build (smoke)
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/Containerfile
+          push: false
+
+  frontend:
+    name: Frontend Go (lint · build · docker)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend-go
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: frontend-go/go.mod
+          cache-dependency-path: frontend-go/go.sum
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          install-mode: goinstall
+          working-directory: frontend-go
+
+      - name: Build
+        run: CGO_ENABLED=0 go build -ldflags="-s -w" -o /dev/null ./cmd/...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Docker build (smoke)
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend-go
+          file: frontend-go/Containerfile
+          push: false
+
+  ui:
+    name: React UI (lint · build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend-go/ui-src
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        run: npm install
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build

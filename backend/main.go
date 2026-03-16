@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -36,8 +38,23 @@ var kaSP = keepalive.ServerParameters{
 	Timeout:               1 * time.Second,
 }
 
+func newLogger() hclog.Logger {
+	level := hclog.LevelFromString(os.Getenv("GOSHORTEN_LOG_LEVEL"))
+	if level == hclog.NoLevel {
+		level = hclog.Info
+	}
+	jsonFormat := os.Getenv("GOSHORTEN_LOG_JSON") == "true"
+	log := hclog.New(&hclog.LoggerOptions{
+		Name:       "goshorten",
+		Level:      level,
+		JSONFormat: jsonFormat,
+	})
+	hclog.SetDefault(log)
+	return log
+}
+
 func main() {
-	log := hclog.Default()
+	log := newLogger()
 
 	conf, err := config.ConfigFromFile("config.json")
 	if err != nil {
@@ -149,23 +166,46 @@ func main() {
 		OIDCMgr:   oidcMgr,
 	})
 
+	// --- Cancellable root context (drives gateway shutdown) ---
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// --- Start REST API Gateway in background ---
 	if conf.Gateway.HTTPAddr != "" {
 		gwCfg := gateway.Config{
 			HTTPAddr:    conf.Gateway.HTTPAddr,
 			GRPCAddr:    conf.GRPCHost,
 			SwaggerJSON: "pb/url_service.swagger.json",
+			ReadyCheckers: map[string]func(context.Context) error{
+				"postgres": func(ctx context.Context) error { return pgStore.Pool.Ping(ctx) },
+				"redis":    func(ctx context.Context) error { return redisClient.Ping().Err() },
+			},
 		}
 		go func() {
-			if err := gateway.Run(context.Background(), gwCfg); err != nil {
+			if err := gateway.Run(ctx, gwCfg); err != nil {
 				log.Error("REST Gateway failed", "error", err)
 			}
 		}()
 	}
 
+	// --- Signal handling ---
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigCh
+		log.Info("Shutdown signal received", "signal", sig.String())
+		gs.GracefulStop() // drain in-flight RPCs; causes gs.Serve to return
+	}()
+
 	log.Info("Serving gRPC", "Host", hclog.Fmt("%s", conf.GRPCHost))
-	err = gs.Serve(lis)
-	if err != nil {
-		log.Error("Serve Error", "Error", err)
+	if err := gs.Serve(lis); err != nil {
+		log.Error("Serve Error", "error", err)
 	}
+
+	// gRPC server stopped — shut down remaining services in order
+	log.Info("Draining services")
+	cancel()             // stop REST gateway HTTP server
+	visitLogger.Close() // flush buffered visit writes
+	pgStore.Pool.Close()
+	log.Info("Shutdown complete")
 }
