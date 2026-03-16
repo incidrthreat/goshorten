@@ -1,31 +1,537 @@
-/* 
-CreateURL will take in a long url, generate a 6 character code to associate with the URL
-and store it in a redis datastore for XX amount of time. (length of time undetermined) and 
-return a shortened URL code m
-
-GetURL will take in a code and return/redirect users to the long URL, if still active.
-*/
-
 syntax = "proto3";
 
-option go_package = "protos";
+option go_package = "github.com/incidrthreat/goshorten/pb;protos";
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 service Shortener {
-    rpc CreateURL(URL) returns (Code);
-    rpc GetURL(Code) returns (URL);
-    rpc GetStats(Code) returns (Stats);
+    rpc CreateURL(CreateURLRequest) returns (ShortURL) {
+        option (google.api.http) = {
+            post: "/api/v1/short-urls"
+            body: "*"
+        };
+    }
+    rpc GetURL(GetURLRequest) returns (ShortURL) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/resolve"
+        };
+    }
+    rpc GetStats(GetStatsRequest) returns (StatsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/stats"
+        };
+    }
+    rpc UpdateURL(UpdateURLRequest) returns (ShortURL) {
+        option (google.api.http) = {
+            patch: "/api/v1/short-urls/{code}"
+            body: "*"
+        };
+    }
+    rpc DeleteURL(DeleteURLRequest) returns (DeleteURLResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/short-urls/{code}"
+        };
+    }
+    rpc ListURLs(ListURLsRequest) returns (ListURLsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls"
+        };
+    }
+    rpc GetQRCode(GetQRCodeRequest) returns (QRCodeResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/qr-code"
+        };
+    }
+    rpc GetVisitSummary(GetVisitSummaryRequest) returns (VisitSummaryResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/visits/summary"
+        };
+    }
+    rpc GetVisitsByDate(GetVisitsByDateRequest) returns (VisitsByDateResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/visits/by-date"
+        };
+    }
+    rpc GetVisitsByField(GetVisitsByFieldRequest) returns (VisitsByFieldResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/visits/by-field"
+        };
+    }
+    rpc GetRecentVisits(GetRecentVisitsRequest) returns (RecentVisitsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/visits/recent"
+        };
+    }
+    rpc GetOrphanVisits(GetOrphanVisitsRequest) returns (OrphanVisitsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/visits/orphan"
+        };
+    }
+    // Tag management
+    rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/tags"
+        };
+    }
+    rpc CreateTag(CreateTagRequest) returns (TagInfo) {
+        option (google.api.http) = {
+            post: "/api/v1/tags"
+            body: "*"
+        };
+    }
+    rpc RenameTag(RenameTagRequest) returns (TagInfo) {
+        option (google.api.http) = {
+            patch: "/api/v1/tags/{old_name}"
+            body: "*"
+        };
+    }
+    rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/tags/{name}"
+        };
+    }
+    rpc GetTagStats(GetTagStatsRequest) returns (TagStatsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/tags/{name}/stats"
+        };
+    }
+    // Public link preview (no auth required) — like bit.ly's code+ feature
+    rpc PreviewURL(PreviewURLRequest) returns (PreviewURLResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/short-urls/{code}/preview"
+        };
+    }
 }
 
-message URL {
-    string LongUrl = 1;
-    int64 TTL = 2;
-    string Stats = 3;
+service Auth {
+    rpc Login(LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/login"
+            body: "*"
+        };
+    }
+    rpc OIDCAuthURL(OIDCAuthURLRequest) returns (OIDCAuthURLResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/auth/oidc/{provider_name}/authorize"
+        };
+    }
+    rpc OIDCCallback(OIDCCallbackRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/oidc/{provider_name}/callback"
+            body: "*"
+        };
+    }
+    rpc ListOIDCProviders(ListOIDCProvidersRequest) returns (ListOIDCProvidersResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/auth/oidc/providers"
+        };
+    }
+    rpc CreateOIDCProvider(CreateOIDCProviderRequest) returns (OIDCProvider) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/oidc/providers"
+            body: "*"
+        };
+    }
+    rpc DeleteOIDCProvider(DeleteOIDCProviderRequest) returns (DeleteOIDCProviderResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/auth/oidc/providers/{name}"
+        };
+    }
+    rpc CreateAPIKey(CreateAPIKeyRequest) returns (CreateAPIKeyResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/api-keys"
+            body: "*"
+        };
+    }
+    rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/auth/api-keys"
+        };
+    }
+    rpc RevokeAPIKey(RevokeAPIKeyRequest) returns (RevokeAPIKeyResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/auth/api-keys/{key_id}"
+        };
+    }
+    rpc RollAPIKey(RollAPIKeyRequest) returns (CreateAPIKeyResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/api-keys/{key_id}/roll"
+        };
+    }
+    rpc GetCurrentUser(GetCurrentUserRequest) returns (UserInfo) {
+        option (google.api.http) = {
+            get: "/api/v1/auth/me"
+        };
+    }
 }
 
-message Code {
-    string Code = 1;
+// --- Request Messages ---
+
+message CreateURLRequest {
+    string long_url = 1;
+    int64 ttl = 2;
+    string custom_slug = 3;
+    string title = 4;
+    int32 max_visits = 5;
+    int32 redirect_type = 6;
+    bool is_crawlable = 7;
+    string domain = 8;
+    repeated string tags = 9;
 }
 
-message Stats {
-    string Stats = 1;
+message GetURLRequest {
+    string code = 1;
+    // Visitor metadata (populated by the frontend/gateway for analytics)
+    string visitor_ip = 2;
+    string visitor_ua = 3;
+    string visitor_referer = 4;
+}
+
+message GetStatsRequest {
+    string code = 1;
+}
+
+message UpdateURLRequest {
+    string code = 1;
+    string long_url = 2;
+    string title = 3;
+    int64 ttl = 4;
+    int32 max_visits = 5;
+    int32 redirect_type = 6;
+    BoolValue is_crawlable = 7;
+    BoolValue is_active = 8;
+    repeated string tags = 9;
+}
+
+message DeleteURLRequest {
+    string code = 1;
+}
+
+message ListURLsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string search = 3;
+    string tag = 4;
+    string domain = 5;
+    string order_by = 6;
+    string order_dir = 7;
+}
+
+message GetQRCodeRequest {
+    string code = 1;
+    int32 size = 2;
+}
+
+// --- Response Messages ---
+
+message ShortURL {
+    string code = 1;
+    string long_url = 2;
+    string title = 3;
+    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp expires_at = 5;
+    bool is_active = 6;
+    int32 max_visits = 7;
+    int32 redirect_type = 8;
+    bool is_crawlable = 9;
+    string domain = 10;
+    repeated string tags = 11;
+    int64 total_clicks = 12;
+}
+
+message DeleteURLResponse {
+    bool success = 1;
+}
+
+message ListURLsResponse {
+    repeated ShortURL urls = 1;
+    int32 total = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+message StatsResponse {
+    string code = 1;
+    string long_url = 2;
+    string title = 3;
+    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp expires_at = 5;
+    google.protobuf.Timestamp last_accessed = 6;
+    int64 total_clicks = 7;
+    bool is_active = 8;
+    int32 max_visits = 9;
+    repeated string tags = 10;
+}
+
+message QRCodeResponse {
+    bytes image = 1;
+    string content_type = 2;
+}
+
+message BoolValue {
+    bool value = 1;
+}
+
+message PreviewURLRequest {
+    string code = 1;
+}
+
+message PreviewURLResponse {
+    string code = 1;
+    string long_url = 2;
+    string title = 3;
+    google.protobuf.Timestamp created_at = 4;
+    int64 total_clicks = 5;
+    bool is_active = 6;
+    string domain = 7;
+    repeated string tags = 8;
+}
+
+// --- Analytics Request Messages ---
+
+message GetVisitSummaryRequest {
+    string code = 1;
+    google.protobuf.Timestamp since = 2;
+    bool exclude_bots = 3;
+}
+
+message GetVisitsByDateRequest {
+    string code = 1;
+    google.protobuf.Timestamp since = 2;
+    google.protobuf.Timestamp until = 3;
+    bool exclude_bots = 4;
+}
+
+message GetVisitsByFieldRequest {
+    string code = 1;
+    string field = 2; // country, city, browser, os, device_type, referer
+    google.protobuf.Timestamp since = 3;
+    bool exclude_bots = 4;
+    int32 limit = 5;
+}
+
+message GetRecentVisitsRequest {
+    string code = 1;
+    int32 limit = 2;
+    bool exclude_bots = 3;
+}
+
+message GetOrphanVisitsRequest {
+    int32 limit = 1;
+}
+
+// --- Analytics Response Messages ---
+
+message VisitSummaryResponse {
+    string code = 1;
+    int64 total_visits = 2;
+    int64 unique_visitors = 3;
+    int64 bot_visits = 4;
+    int64 human_visits = 5;
+}
+
+message VisitsByDateEntry {
+    string date = 1;
+    int64 visits = 2;
+}
+
+message VisitsByDateResponse {
+    string code = 1;
+    repeated VisitsByDateEntry entries = 2;
+}
+
+message VisitsByFieldEntry {
+    string value = 1;
+    int64 visits = 2;
+}
+
+message VisitsByFieldResponse {
+    string code = 1;
+    string field = 2;
+    repeated VisitsByFieldEntry entries = 3;
+}
+
+message VisitEntry {
+    google.protobuf.Timestamp visited_at = 1;
+    string ip_address = 2;
+    string user_agent = 3;
+    string referer = 4;
+    string country = 5;
+    string city = 6;
+    string device_type = 7;
+    string browser = 8;
+    string os = 9;
+    bool is_bot = 10;
+}
+
+message RecentVisitsResponse {
+    string code = 1;
+    repeated VisitEntry visits = 2;
+}
+
+message OrphanVisitsResponse {
+    repeated OrphanVisitEntry visits = 1;
+    int64 total_count = 2;
+}
+
+message OrphanVisitEntry {
+    string code = 1;
+    google.protobuf.Timestamp visited_at = 2;
+    string ip_address = 3;
+    string user_agent = 4;
+    string referer = 5;
+    string country = 6;
+    string city = 7;
+    bool is_bot = 8;
+}
+
+// --- Tag Messages ---
+
+message ListTagsRequest {}
+
+message ListTagsResponse {
+    repeated TagInfo tags = 1;
+}
+
+message TagInfo {
+    int64 id = 1;
+    string name = 2;
+    int64 url_count = 3;
+}
+
+message CreateTagRequest {
+    string name = 1;
+}
+
+message RenameTagRequest {
+    string old_name = 1;
+    string new_name = 2;
+}
+
+message DeleteTagRequest {
+    string name = 1;
+}
+
+message DeleteTagResponse {
+    bool success = 1;
+}
+
+message GetTagStatsRequest {
+    string name = 1;
+}
+
+message TagStatsResponse {
+    TagInfo tag = 1;
+    int64 total_clicks = 2;
+    int64 unique_urls = 3;
+}
+
+// --- Auth Messages ---
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+    UserInfo user = 2;
+}
+
+message OIDCAuthURLRequest {
+    string provider_name = 1;
+}
+
+message OIDCAuthURLResponse {
+    string auth_url = 1;
+    string state = 2;
+}
+
+message OIDCCallbackRequest {
+    string provider_name = 1;
+    string code = 2;
+    string state = 3;
+}
+
+message ListOIDCProvidersRequest {}
+
+message ListOIDCProvidersResponse {
+    repeated OIDCProvider providers = 1;
+}
+
+message OIDCProvider {
+    int64 id = 1;
+    string name = 2;
+    string issuer_url = 3;
+    bool is_enabled = 4;
+    bool auto_register = 5;
+    string default_role = 6;
+}
+
+message CreateOIDCProviderRequest {
+    string name = 1;
+    string issuer_url = 2;
+    string client_id = 3;
+    string client_secret = 4;
+    string redirect_uri = 5;
+    string scopes = 6;
+    bool auto_register = 7;
+    string default_role = 8;
+}
+
+message DeleteOIDCProviderRequest {
+    string name = 1;
+}
+
+message DeleteOIDCProviderResponse {
+    bool success = 1;
+}
+
+message CreateAPIKeyRequest {
+    string label = 1;
+    string scopes = 2;
+}
+
+message CreateAPIKeyResponse {
+    string plaintext_key = 1;
+    APIKeyInfo key = 2;
+}
+
+message ListAPIKeysRequest {}
+
+message ListAPIKeysResponse {
+    repeated APIKeyInfo keys = 1;
+}
+
+message APIKeyInfo {
+    int64 id = 1;
+    string label = 2;
+    string scopes = 3;
+    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp expires_at = 5;
+    bool revoked = 6;
+    string key_prefix = 7;
+}
+
+message RevokeAPIKeyRequest {
+    int64 key_id = 1;
+}
+
+message RevokeAPIKeyResponse {
+    bool success = 1;
+}
+
+message RollAPIKeyRequest {
+    int64 key_id = 1;
+}
+
+message GetCurrentUserRequest {}
+
+message UserInfo {
+    int64 id = 1;
+    string email = 2;
+    string name = 3;
+    string role = 4;
+    google.protobuf.Timestamp created_at = 5;
 }
