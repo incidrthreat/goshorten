@@ -195,7 +195,7 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 7.5 API key management UI
  - 7.6 Settings/config page
 
-### [ ] Phase 8: Infrastructure & Operations
+### [X] Phase 8: Infrastructure & Operations
  - 8.1 Structured JSON logging with log levels
  - 8.2 Health check endpoints (liveness + readiness)
  - 8.3 Prometheus metrics (request latency, cache hit/miss ratio, active URLs)
@@ -215,3 +215,11 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 10.1 Shlink-compatible import (read Shlink DB or API export)
  - 10.2 CSV/JSON bulk import
  - 10.3 CLI tool for admin operations (create URL, list, stats, manage keys)
+
+### [ ] Phase 11: Advanced Link Features
+ - 11.1 UTM parameter builder (compose and persist utm_source/medium/campaign/term/content at creation time; strip/rewrite on redirect)
+ - 11.2 Password-protected links (per-URL passphrase stored as bcrypt hash; interstitial challenge page before redirect)
+ - 11.3 Dynamic redirects — geo (different target URLs per country or region using existing GeoIP data)
+ - 11.4 Dynamic redirects — device (separate targets for mobile, tablet, and desktop based on parsed user-agent)
+ - 11.5 Dynamic redirects — time (scheduled activation windows and expiry rules beyond simple TTL)
+ - 11.6 A/B redirect (weighted split across multiple target URLs with per-variant click tracking)
