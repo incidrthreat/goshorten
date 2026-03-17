@@ -57,7 +57,7 @@ services:
     frontend:
         hostname: frontend
         build:
-            context: frontend-go/.
+            context: frontend/.
             dockerfile: Containerfile
         dns_search: .
         ports:

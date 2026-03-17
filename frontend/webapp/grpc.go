@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	pb "github.com/incidrthreat/goshorten/frontend-go/pb"
+	pb "github.com/incidrthreat/goshorten/frontend/pb"
 )
 
 // GetURL handles short-code redirect requests.

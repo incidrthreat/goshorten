@@ -1,4 +1,4 @@
-module github.com/incidrthreat/goshorten/frontend-go
+module github.com/incidrthreat/goshorten/frontend
 
 go 1.24.0
 

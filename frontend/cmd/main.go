@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/incidrthreat/goshorten/frontend-go/webapp"
+	"github.com/incidrthreat/goshorten/frontend/webapp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
