@@ -13,12 +13,12 @@ grpc-client
 goshorten
 
 # Frontend build output
-frontend-go/dist/
-frontend-go/.cache/
+frontend/dist/
+frontend/.cache/
 
 # Node
-frontend-go/ui-src/node_modules/
-frontend-go/ui-src/package-lock.json
+frontend/ui-src/node_modules/
+frontend/ui-src/package-lock.json
 
 # TLS certs / keys
 *.crt
@@ -26,7 +26,7 @@ frontend-go/ui-src/package-lock.json
 *.key
 *.pem
 backend/server.*
-frontend-go/server.*
+frontend/server.*
 collision_tests/server.*
 
 # IDE / editor

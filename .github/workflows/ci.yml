@@ -6,9 +6,14 @@ on:
   pull_request:
     branches: [master]
 
+# Shared condition: run the expensive steps only on PRs or master pushes.
+# Branch pushes (feature/fix/etc.) get lint only for fast feedback.
+env:
+  FULL_RUN: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
+
 jobs:
   backend:
-    name: Backend (lint · build · docker)
+    name: Backend
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,7 +27,7 @@ jobs:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
 
-      - name: golangci-lint
+      - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
@@ -30,13 +35,15 @@ jobs:
           working-directory: backend
 
       - name: Build
+        if: env.FULL_RUN == 'true'
         run: CGO_ENABLED=0 go build -ldflags="-s -w" -o /dev/null .
 
       - name: Test
+        if: env.FULL_RUN == 'true'
         run: go test ./...
 
       - name: Docker build (smoke)
-        if: github.event_name == 'push'
+        if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -44,47 +51,49 @@ jobs:
           push: false
 
   frontend:
-    name: Frontend Go (lint · build · docker)
+    name: Frontend
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend-go
+        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: frontend-go/go.mod
-          cache-dependency-path: frontend-go/go.sum
+          go-version-file: frontend/go.mod
+          cache-dependency-path: frontend/go.sum
 
-      - name: golangci-lint
+      - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           install-mode: goinstall
-          working-directory: frontend-go
+          working-directory: frontend
 
       - name: Build
+        if: env.FULL_RUN == 'true'
         run: CGO_ENABLED=0 go build -ldflags="-s -w" -o /dev/null ./cmd/...
 
       - name: Test
+        if: env.FULL_RUN == 'true'
         run: go test ./...
 
       - name: Docker build (smoke)
-        if: github.event_name == 'push'
+        if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
         with:
-          context: frontend-go
-          file: frontend-go/Containerfile
+          context: frontend
+          file: frontend/Containerfile
           push: false
 
   ui:
-    name: React UI (lint · build)
+    name: React UI
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend-go/ui-src
+        working-directory: frontend/ui-src
 
     steps:
       - uses: actions/checkout@v4
@@ -100,4 +109,5 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Build
+        if: env.FULL_RUN == 'true'
         run: npm run build
