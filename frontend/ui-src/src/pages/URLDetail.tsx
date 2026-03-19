@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import QRCodeStyling from 'qr-code-styling'
 import { urls, analytics } from '../api/client'
 import {
   BarChart,
@@ -118,8 +119,8 @@ export default function URLDetail() {
       </div>
 
       {showQR && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex justify-center">
-          <img src={urls.qrCode(code!)} alt="QR Code" className="w-48 h-48" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <QRPanel url={shortURL} />
         </div>
       )}
 
@@ -223,6 +224,87 @@ export default function URLDetail() {
     </div>
   )
 }
+
+// --- QR Panel ---
+
+type DotStyle = 'square' | 'rounded' | 'dots' | 'classy' | 'classy-rounded' | 'extra-rounded'
+
+const DOT_STYLES: { label: string; value: DotStyle }[] = [
+  { label: 'Square', value: 'square' },
+  { label: 'Rounded', value: 'rounded' },
+  { label: 'Dots', value: 'dots' },
+  { label: 'Classy', value: 'classy' },
+  { label: 'Classy Rounded', value: 'classy-rounded' },
+  { label: 'Extra Rounded', value: 'extra-rounded' },
+]
+
+function QRPanel({ url }: { url: string }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const qrRef = useRef<QRCodeStyling | null>(null)
+  const [dotStyle, setDotStyle] = useState<DotStyle>('rounded')
+  const [fgColor, setFgColor] = useState('#000000')
+  const [bgColor, setBgColor] = useState('#ffffff')
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const qr = new QRCodeStyling({
+      width: 220,
+      height: 220,
+      data: url,
+      dotsOptions: { color: fgColor, type: dotStyle },
+      backgroundOptions: { color: bgColor },
+      cornersSquareOptions: { type: 'extra-rounded' },
+      cornersDotOptions: { type: 'dot' },
+      qrOptions: { errorCorrectionLevel: 'M' },
+    })
+    containerRef.current.innerHTML = ''
+    qr.append(containerRef.current)
+    qrRef.current = qr
+  }, [url, dotStyle, fgColor, bgColor])
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div ref={containerRef} />
+      <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+        <select
+          value={dotStyle}
+          onChange={(e) => setDotStyle(e.target.value as DotStyle)}
+          className="border border-gray-300 rounded px-2 py-1 text-sm"
+        >
+          {DOT_STYLES.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+        <label className="flex items-center gap-1.5 text-gray-600">
+          <input
+            type="color"
+            value={fgColor}
+            onChange={(e) => setFgColor(e.target.value)}
+            className="w-6 h-6 rounded cursor-pointer border border-gray-300"
+          />
+          Color
+        </label>
+        <label className="flex items-center gap-1.5 text-gray-600">
+          <input
+            type="color"
+            value={bgColor}
+            onChange={(e) => setBgColor(e.target.value)}
+            className="w-6 h-6 rounded cursor-pointer border border-gray-300"
+          />
+          Background
+        </label>
+        <button
+          onClick={() => qrRef.current?.download({ name: `qr-${url.split('/').pop()}`, extension: 'png' })}
+          className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
+        >
+          Download PNG
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// --- Charts ---
 
 function ChartCard({ title, data }: { title: string; data: { value: string; visits: number }[] }) {
   if (data.length === 0) {

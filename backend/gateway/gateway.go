@@ -53,12 +53,14 @@ func Run(ctx context.Context, cfg Config) error {
 	// Build the HTTP handler chain
 	handler := corsMiddleware(mux)
 
-	// Serve OpenAPI spec at /api/v1/swagger.json
 	httpMux := http.NewServeMux()
 	if cfg.SwaggerJSON != "" {
+		// Raw spec — consumed by tools and the UI below
 		httpMux.HandleFunc("/api/v1/swagger.json", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, cfg.SwaggerJSON)
 		})
+		// Swagger UI — human-readable docs at /api/v1/docs
+		httpMux.HandleFunc("/api/v1/docs", swaggerUIHandler)
 	}
 	// Liveness check — always 200 if the process is up
 	httpMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {

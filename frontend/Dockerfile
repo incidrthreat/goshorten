@@ -20,13 +20,16 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o grpc-client ./cmd/*
+ARG APP_VERSION=dev
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${APP_VERSION}" -o grpc-client ./cmd/*
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o healthcheck ./healthcheck
 
 FROM gcr.io/distroless/static-debian12:nonroot
 
 WORKDIR /app
 
 COPY --from=builder /app/grpc-client .
+COPY --from=builder /app/healthcheck .
 COPY --from=frontend /dist/ ./dist/
 
 EXPOSE 8081

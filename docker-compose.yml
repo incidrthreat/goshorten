@@ -4,6 +4,8 @@ services:
         build:
             context: backend/.
             dockerfile: Containerfile
+            args:
+                APP_VERSION: ${APP_VERSION:-dev}
         ports:
             - 8080:8080
         environment:
@@ -23,7 +25,7 @@ services:
             postgres:
                 condition: service_healthy
         healthcheck:
-            test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+            test: ["CMD", "./healthcheck"]
             interval: 10s
             timeout: 3s
             retries: 5
@@ -59,6 +61,8 @@ services:
         build:
             context: frontend/.
             dockerfile: Containerfile
+            args:
+                APP_VERSION: ${APP_VERSION:-dev}
         dns_search: .
         ports:
             - 8081:8081
