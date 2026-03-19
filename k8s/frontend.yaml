@@ -17,6 +17,8 @@ spec:
         - name: goshorten-frontend
           image: ghcr.io/incidrthreat/goshorten-frontend:latest
           env:
+            - name: GOSHORTEN_FRONTEND_PORT
+              value: ":8081"
             - name: GOSHORTEN_GRPC_ADDR
               value: "goshorten-backend:9000"
             - name: GOSHORTEN_BACKEND_URL

@@ -10,12 +10,12 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
 	github.com/hashicorp/go-hclog v0.14.1
-	github.com/jackc/pgx/v5 v5.5.1
+	github.com/jackc/pgx/v5 v5.5.4
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.46.0
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 )
 
