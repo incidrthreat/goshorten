@@ -84,19 +84,6 @@ func (p *PostgresStore) Load(code string) (string, error) {
 		}
 	}
 
-	// Record click via visit logger (if set) or fallback to bare insert.
-	if p.visitLogger != nil {
-		p.visitLogger.LogVisit(Visit{URLID: urlID})
-	} else {
-		go func() {
-			_, err := p.Pool.Exec(context.Background(),
-				`INSERT INTO clicks (url_id, clicked_at) VALUES ($1, NOW())`, urlID)
-			if err != nil {
-				log.Error("Postgres Click", "Error recording click", err)
-			}
-		}()
-	}
-
 	log.Info("Postgres Load", "URL retrieved", longURL)
 	return longURL, nil
 }
@@ -108,31 +95,38 @@ func (p *PostgresStore) SetVisitLogger(vl *VisitLogger) {
 
 // RecordVisit records a visit with full metadata for the given code.
 func (p *PostgresStore) RecordVisit(code string, ipAddress, userAgent, referer string) {
-	if p.visitLogger == nil {
-		return
-	}
-
 	// Look up URL ID
 	var urlID int64
 	err := p.Pool.QueryRow(context.Background(),
 		`SELECT id FROM urls WHERE code = $1`, code).Scan(&urlID)
 	if err != nil {
-		// Orphan visit
-		p.visitLogger.LogOrphanVisit(Visit{
-			Code:      code,
+		if p.visitLogger != nil {
+			p.visitLogger.LogOrphanVisit(Visit{
+				Code:      code,
+				IPAddress: ipAddress,
+				UserAgent: userAgent,
+				Referer:   referer,
+			})
+		}
+		return
+	}
+
+	if p.visitLogger != nil {
+		p.visitLogger.LogVisit(Visit{
+			URLID:     urlID,
 			IPAddress: ipAddress,
 			UserAgent: userAgent,
 			Referer:   referer,
 		})
-		return
+	} else {
+		go func() {
+			_, err := p.Pool.Exec(context.Background(),
+				`INSERT INTO clicks (url_id, clicked_at) VALUES ($1, NOW())`, urlID)
+			if err != nil {
+				log.Error("Postgres Click", "Error recording click", err)
+			}
+		}()
 	}
-
-	p.visitLogger.LogVisit(Visit{
-		URLID:     urlID,
-		IPAddress: ipAddress,
-		UserAgent: userAgent,
-		Referer:   referer,
-	})
 }
 
 // Stats returns JSON stats for a given code (legacy format for frontend compat).
@@ -196,7 +190,16 @@ func (p *PostgresStore) Create(params URLCreateParams) (*URLRecord, error) {
 
 	// If custom slug provided, use it directly.
 	if params.CustomSlug != "" {
-		return p.insertURL(params.CustomSlug, params, expiresAt, redirectType)
+		rec, err := p.insertURL(params.CustomSlug, params, expiresAt, redirectType)
+		if err != nil && isUniqueViolation(err) {
+			// Give a clear message. If the conflict is an inactive URL (e.g. hit
+			// max-visits) tell the user they can re-enable it instead.
+			if existing, _ := p.Get(params.CustomSlug); existing != nil && !existing.IsActive {
+				return nil, fmt.Errorf("slug %q already exists but is deactivated — edit the existing URL to re-enable it, or choose a different slug", params.CustomSlug)
+			}
+			return nil, fmt.Errorf("slug %q is already in use", params.CustomSlug)
+		}
+		return rec, err
 	}
 
 	// Auto-generate code with collision retry.
@@ -220,13 +223,14 @@ func (p *PostgresStore) Create(params URLCreateParams) (*URLRecord, error) {
 func (p *PostgresStore) insertURL(code string, params URLCreateParams, expiresAt *time.Time, redirectType int32) (*URLRecord, error) {
 	rec := &URLRecord{}
 	err := p.Pool.QueryRow(context.Background(),
-		`INSERT INTO urls (code, long_url, title, expires_at, max_visits, redirect_type, is_crawlable, domain)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		 RETURNING id, code, long_url, title, created_at, expires_at, is_active, max_visits, redirect_type, is_crawlable, domain`,
+		`INSERT INTO urls (code, long_url, title, expires_at, max_visits, redirect_type, is_crawlable, domain, created_by)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		 RETURNING id, code, long_url, title, created_at, expires_at, is_active, max_visits, redirect_type, is_crawlable, domain, created_by`,
 		code, params.LongURL, nullIfEmpty(params.Title), expiresAt,
-		params.MaxVisits, redirectType, params.IsCrawlable, params.Domain,
+		params.MaxVisits, redirectType, params.IsCrawlable, params.Domain, params.UserID,
 	).Scan(&rec.ID, &rec.Code, &rec.LongURL, &rec.Title, &rec.CreatedAt, &rec.ExpiresAt,
-		&rec.IsActive, &rec.MaxVisits, &rec.RedirectType, &rec.IsCrawlable, &rec.Domain)
+		&rec.IsActive, &rec.MaxVisits, &rec.RedirectType, &rec.IsCrawlable, &rec.Domain,
+		&rec.CreatedByUserID)
 
 	if err != nil {
 		return nil, fmt.Errorf("insert url: %w", err)
@@ -250,15 +254,17 @@ func (p *PostgresStore) Get(code string) (*URLRecord, error) {
 	err := p.Pool.QueryRow(context.Background(),
 		`SELECT u.id, u.code, u.long_url, COALESCE(u.title, ''), u.created_at, u.expires_at,
 			u.is_active, u.max_visits, u.redirect_type, u.is_crawlable, u.domain,
-			COUNT(c.id) AS total_clicks
+			COUNT(c.id) AS total_clicks,
+			u.created_by, COALESCE(usr.email, '')
 		 FROM urls u
 		 LEFT JOIN clicks c ON c.url_id = u.id
+		 LEFT JOIN users usr ON usr.id = u.created_by
 		 WHERE u.code = $1
-		 GROUP BY u.id`,
+		 GROUP BY u.id, usr.email`,
 		code,
 	).Scan(&rec.ID, &rec.Code, &rec.LongURL, &rec.Title, &rec.CreatedAt, &rec.ExpiresAt,
 		&rec.IsActive, &rec.MaxVisits, &rec.RedirectType, &rec.IsCrawlable, &rec.Domain,
-		&rec.TotalClicks)
+		&rec.TotalClicks, &rec.CreatedByUserID, &rec.CreatedByEmail)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -324,6 +330,15 @@ func (p *PostgresStore) Update(params URLUpdateParams) (*URLRecord, error) {
 		args = append(args, *params.IsActive)
 		argIdx++
 	}
+	if params.AssignedUserID != nil {
+		setClauses = append(setClauses, fmt.Sprintf("created_by = $%d", argIdx))
+		if *params.AssignedUserID == 0 {
+			args = append(args, nil) // clear owner
+		} else {
+			args = append(args, *params.AssignedUserID)
+		}
+		argIdx++
+	}
 
 	if len(setClauses) == 0 && params.Tags == nil {
 		return p.Get(params.Code)
@@ -359,10 +374,10 @@ func (p *PostgresStore) Update(params URLUpdateParams) (*URLRecord, error) {
 	return p.Get(params.Code)
 }
 
-// Delete soft-deletes a URL by setting is_active = false.
+// Delete permanently removes a URL and its associated clicks/tags (via CASCADE).
 func (p *PostgresStore) Delete(code string) error {
 	result, err := p.Pool.Exec(context.Background(),
-		`UPDATE urls SET is_active = FALSE WHERE code = $1`, code)
+		`DELETE FROM urls WHERE code = $1`, code)
 	if err != nil {
 		return fmt.Errorf("delete url: %w", err)
 	}
@@ -402,7 +417,7 @@ func (p *PostgresStore) List(params URLListParams) (*URLListResult, error) {
 		orderDir = "ASC"
 	}
 
-	whereClauses := []string{"u.is_active = TRUE"}
+	whereClauses := []string{}
 	args := []interface{}{}
 	argIdx := 1
 
@@ -422,8 +437,18 @@ func (p *PostgresStore) List(params URLListParams) (*URLListResult, error) {
 		args = append(args, params.Domain)
 		argIdx++
 	}
+	if params.UserID != nil {
+		whereClauses = append(whereClauses, fmt.Sprintf("u.created_by = $%d", argIdx))
+		args = append(args, *params.UserID)
+		argIdx++
+	}
 
-	whereSQL := strings.Join(whereClauses, " AND ")
+	var whereSQL string
+	if len(whereClauses) > 0 {
+		whereSQL = strings.Join(whereClauses, " AND ")
+	} else {
+		whereSQL = "TRUE"
+	}
 
 	// Count query
 	var total int32
@@ -437,11 +462,13 @@ func (p *PostgresStore) List(params URLListParams) (*URLListResult, error) {
 	dataQuery := fmt.Sprintf(
 		`SELECT u.id, u.code, u.long_url, COALESCE(u.title, ''), u.created_at, u.expires_at,
 			u.is_active, u.max_visits, u.redirect_type, u.is_crawlable, u.domain,
-			COUNT(c.id) AS total_clicks
+			COUNT(c.id) AS total_clicks,
+			u.created_by, COALESCE(usr.email, '')
 		 FROM urls u
 		 LEFT JOIN clicks c ON c.url_id = u.id
+		 LEFT JOIN users usr ON usr.id = u.created_by
 		 WHERE %s
-		 GROUP BY u.id
+		 GROUP BY u.id, usr.email
 		 ORDER BY %s %s
 		 LIMIT $%d OFFSET $%d`,
 		whereSQL, orderCol, orderDir, argIdx, argIdx+1)
@@ -458,7 +485,7 @@ func (p *PostgresStore) List(params URLListParams) (*URLListResult, error) {
 		var rec URLRecord
 		if err := rows.Scan(&rec.ID, &rec.Code, &rec.LongURL, &rec.Title, &rec.CreatedAt, &rec.ExpiresAt,
 			&rec.IsActive, &rec.MaxVisits, &rec.RedirectType, &rec.IsCrawlable, &rec.Domain,
-			&rec.TotalClicks); err != nil {
+			&rec.TotalClicks, &rec.CreatedByUserID, &rec.CreatedByEmail); err != nil {
 			return nil, fmt.Errorf("scan url: %w", err)
 		}
 		tags, _ := p.getTags(rec.ID)

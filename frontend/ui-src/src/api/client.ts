@@ -41,6 +41,66 @@ export const auth = {
       body: JSON.stringify({ email, password }),
     }),
   me: () => request<{ id: string; email: string; name: string; role: string }>('/auth/me'),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ status: string }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+  updateProfile: (params: { email?: string; name?: string }) =>
+    request<{ id: string; email: string; name: string; role: string }>('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(params),
+    }),
+}
+
+// --- Admin ---
+export const admin = {
+  users: {
+    list: (params: { search?: string; page?: number; page_size?: number }) => {
+      const qs = new URLSearchParams()
+      if (params.search) qs.set('search', params.search)
+      if (params.page) qs.set('page', String(params.page))
+      if (params.page_size) qs.set('page_size', String(params.page_size))
+      return request<{ users: Array<Record<string, unknown>>; total: number; page: number; pageSize: number }>(
+        `/admin/users?${qs}`
+      )
+    },
+    update: (
+      id: number,
+      params: { role?: string; isActive?: boolean; email?: string; name?: string }
+    ) =>
+      request<Record<string, unknown>>(`/admin/users/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(params),
+      }),
+    create: (params: { email: string; name?: string; password: string; role?: string }) =>
+      request<Record<string, unknown>>('/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }),
+    delete: (id: number) =>
+      request<{ status: string }>(`/admin/users/${id}`, { method: 'DELETE' }),
+  },
+  urls: {
+    list: (params: Record<string, string | number>) => {
+      const qs = new URLSearchParams()
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== '' && v !== 0) qs.set(k, String(v))
+      }
+      return request<{
+        urls: Array<Record<string, unknown>>
+        total: number
+        page: number
+        pageSize: number
+      }>(`/admin/short-urls?${qs}`)
+    },
+    get: (code: string) => request<Record<string, unknown>>(`/admin/short-urls/${code}`),
+    assign: (code: string, assignedUserId: number) =>
+      request<{ status: string }>(`/admin/short-urls/${code}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ assignedUserId }),
+      }),
+  },
 }
 
 // --- URLs ---

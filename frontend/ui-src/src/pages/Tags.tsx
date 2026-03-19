@@ -90,7 +90,7 @@ export default function TagsPage() {
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
           placeholder="New tag name..."
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
         />
         <button
           type="submit"
@@ -106,49 +106,49 @@ export default function TagsPage() {
 
       {/* Stats modal */}
       {statsFor && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 relative">
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 relative">
           <button
             onClick={() => setStatsFor(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
           >
             <X className="w-4 h-4" />
           </button>
-          <h3 className="font-medium text-gray-900 mb-2">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
             Stats for &ldquo;{statsFor.tag.name}&rdquo;
           </h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-gray-900">{Number(statsFor.uniqueUrls)}</p>
-              <p className="text-xs text-gray-500">URLs</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{Number(statsFor.uniqueUrls)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">URLs</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {Number(statsFor.totalClicks).toLocaleString()}
               </p>
-              <p className="text-xs text-gray-500">Total Clicks</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Total Clicks</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {Number(statsFor.uniqueUrls) > 0
                   ? Math.round(Number(statsFor.totalClicks) / Number(statsFor.uniqueUrls))
                   : 0}
               </p>
-              <p className="text-xs text-gray-500">Avg Clicks/URL</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Avg Clicks/URL</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Tag list */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading...</div>
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>
         ) : tagList.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No tags yet. Create one above.</div>
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">No tags yet. Create one above.</div>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700">
             {tagList.map((tag) => (
-              <li key={tag.id} className="flex items-center px-4 py-3 hover:bg-gray-50">
+              <li key={tag.id} className="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800">
                 {editing?.name === tag.name ? (
                   <div className="flex-1 flex items-center gap-2">
                     <input
@@ -156,7 +156,7 @@ export default function TagsPage() {
                       value={editing.newName}
                       onChange={(e) => setEditing({ ...editing, newName: e.target.value })}
                       onKeyDown={(e) => e.key === 'Enter' && handleRename()}
-                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                       autoFocus
                     />
                     <button onClick={handleRename} className="text-green-600 hover:text-green-700">
@@ -171,8 +171,8 @@ export default function TagsPage() {
                   </div>
                 ) : (
                   <>
-                    <span className="flex-1 text-sm font-medium text-gray-900">{tag.name}</span>
-                    <span className="text-xs text-gray-500 mr-4">
+                    <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">{tag.name}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 mr-4">
                       {Number(tag.urlCount)} URL{Number(tag.urlCount) !== 1 ? 's' : ''}
                     </span>
                     <div className="flex items-center gap-1">

@@ -178,6 +178,11 @@ func main() {
 				"postgres": func(ctx context.Context) error { return pgStore.Pool.Ping(ctx) },
 				"redis":    func(ctx context.Context) error { return redisClient.Ping().Err() },
 			},
+			AdminHandler: &gateway.AdminHandler{
+				AuthStore: authStore,
+				JWTMgr:   jwtMgr,
+				URLStore:  store,
+			},
 		}
 		go func() {
 			if err := gateway.Run(ctx, gwCfg); err != nil {

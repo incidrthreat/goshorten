@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -113,11 +114,126 @@ func (s *AuthStore) CreateUser(ctx context.Context, email, name, role string, pa
 	return u, nil
 }
 
+// DeleteUser permanently removes a user record.
+func (s *AuthStore) DeleteUser(ctx context.Context, userID int64) error {
+	result, err := s.Pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, userID)
+	if err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
+
 // UpdateUserPassword updates a user's password hash.
 func (s *AuthStore) UpdateUserPassword(ctx context.Context, userID int64, hash string) error {
 	_, err := s.Pool.Exec(ctx,
 		`UPDATE users SET password_hash = $1 WHERE id = $2`, hash, userID)
 	return err
+}
+
+// UpdateUserEmail updates a user's email address.
+func (s *AuthStore) UpdateUserEmail(ctx context.Context, userID int64, email string) error {
+	_, err := s.Pool.Exec(ctx,
+		`UPDATE users SET email = $1 WHERE id = $2`, email, userID)
+	return err
+}
+
+// UpdateUserParams holds fields that an admin can change on a user.
+type UpdateUserParams struct {
+	Role     *string
+	IsActive *bool
+	Email    *string
+	Name     *string
+}
+
+// UpdateUser applies admin-level changes to a user record.
+func (s *AuthStore) UpdateUser(ctx context.Context, userID int64, params UpdateUserParams) (*User, error) {
+	setClauses := []string{}
+	args := []interface{}{}
+	idx := 1
+
+	if params.Role != nil {
+		setClauses = append(setClauses, fmt.Sprintf("role = $%d", idx))
+		args = append(args, *params.Role)
+		idx++
+	}
+	if params.IsActive != nil {
+		setClauses = append(setClauses, fmt.Sprintf("is_active = $%d", idx))
+		args = append(args, *params.IsActive)
+		idx++
+	}
+	if params.Email != nil {
+		setClauses = append(setClauses, fmt.Sprintf("email = $%d", idx))
+		args = append(args, *params.Email)
+		idx++
+	}
+	if params.Name != nil {
+		setClauses = append(setClauses, fmt.Sprintf("name = $%d", idx))
+		args = append(args, *params.Name)
+		idx++
+	}
+
+	if len(setClauses) == 0 {
+		return s.GetUserByID(ctx, userID)
+	}
+
+	query := fmt.Sprintf("UPDATE users SET %s WHERE id = $%d",
+		strings.Join(setClauses, ", "), idx)
+	args = append(args, userID)
+
+	if _, err := s.Pool.Exec(ctx, query, args...); err != nil {
+		return nil, fmt.Errorf("update user: %w", err)
+	}
+	return s.GetUserByID(ctx, userID)
+}
+
+// ListUsers returns a paginated list of users with optional search.
+func (s *AuthStore) ListUsers(ctx context.Context, search string, page, pageSize int) ([]User, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	args := []interface{}{}
+	idx := 1
+	whereSQL := ""
+	if search != "" {
+		whereSQL = fmt.Sprintf("WHERE email ILIKE $%d OR COALESCE(name, '') ILIKE $%d", idx, idx)
+		args = append(args, "%"+search+"%")
+		idx++
+	}
+
+	var total int
+	if err := s.Pool.QueryRow(ctx,
+		fmt.Sprintf("SELECT COUNT(*) FROM users %s", whereSQL), args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count users: %w", err)
+	}
+
+	offset := (page - 1) * pageSize
+	rows, err := s.Pool.Query(ctx,
+		fmt.Sprintf(`SELECT id, email, COALESCE(name, ''), role, password_hash, oidc_subject, oidc_issuer, is_active, created_at
+		 FROM users %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d`,
+			whereSQL, idx, idx+1),
+		append(args, pageSize, offset)...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.PasswordHash,
+			&u.OIDCSubject, &u.OIDCIssuer, &u.IsActive, &u.CreatedAt); err != nil {
+			return nil, 0, err
+		}
+		users = append(users, u)
+	}
+	return users, total, nil
 }
 
 // --- Break-glass admin bootstrap ---

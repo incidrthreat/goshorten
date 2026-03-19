@@ -7,7 +7,10 @@ import (
 	pb "github.com/incidrthreat/goshorten/backend/pb"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/incidrthreat/goshorten/backend/auth"
 	"github.com/incidrthreat/goshorten/backend/data"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -54,6 +57,10 @@ func (c *CreateServer) CreateURL(ctx context.Context, req *pb.CreateURLRequest) 
 		Tags:         req.GetTags(),
 	}
 
+	if userID, ok := auth.UserIDFromContext(ctx); ok {
+		params.UserID = &userID
+	}
+
 	if req.GetMaxVisits() > 0 {
 		mv := req.GetMaxVisits()
 		params.MaxVisits = &mv
@@ -80,27 +87,28 @@ func (c *CreateServer) GetURL(ctx context.Context, req *pb.GetURLRequest) (*pb.S
 		return nil, errNoCode
 	}
 
-	fullURL, err := c.Store.Load(code)
-	if err != nil {
-		// Record orphan visit if visitor metadata is present
-		if req.GetVisitorIp() != "" || req.GetVisitorUa() != "" {
-			c.Store.RecordVisit(code, req.GetVisitorIp(), req.GetVisitorUa(), req.GetVisitorReferer())
+	hasVisitor := req.GetVisitorIp() != "" || req.GetVisitorUa() != ""
+
+	if hasVisitor {
+		// Redirect path: Load() checks expiry/active/max-visits.
+		// RecordVisit() records the click with full visitor metadata.
+		fullURL, err := c.Store.Load(code)
+		if err != nil {
+			return nil, errors.New("URL expired or not in storage")
 		}
-		return nil, errors.New("URL expired or not in storage")
-	}
-
-	// Record visit with metadata (if provided by frontend/gateway)
-	if req.GetVisitorIp() != "" || req.GetVisitorUa() != "" {
 		c.Store.RecordVisit(code, req.GetVisitorIp(), req.GetVisitorUa(), req.GetVisitorReferer())
+		rec, err := c.Store.Get(code)
+		if err != nil {
+			return &pb.ShortURL{LongUrl: fullURL, RedirectType: 302}, nil
+		}
+		return urlRecordToProto(rec), nil
 	}
 
-	// Also fetch the full record for redirect_type info
+	// API lookup path (e.g. edit form): use Get() which does not record a click.
 	rec, err := c.Store.Get(code)
 	if err != nil {
-		// Fallback: return just the URL with default redirect
-		return &pb.ShortURL{LongUrl: fullURL, RedirectType: 302}, nil
+		return nil, errors.New("URL not found")
 	}
-
 	return urlRecordToProto(rec), nil
 }
 
@@ -141,6 +149,18 @@ func (c *CreateServer) UpdateURL(ctx context.Context, req *pb.UpdateURLRequest) 
 	code := req.GetCode()
 	if code == "" {
 		return nil, errNoCode
+	}
+
+	// Ownership check: non-admins may only update URLs they created.
+	if role := auth.RoleFromContext(ctx); role != "admin" {
+		rec, err := c.Store.Get(code)
+		if err != nil {
+			return nil, status.Error(codes.NotFound, "URL not found")
+		}
+		userID, ok := auth.UserIDFromContext(ctx)
+		if !ok || rec.CreatedByUserID == nil || *rec.CreatedByUserID != userID {
+			return nil, status.Error(codes.PermissionDenied, "you do not own this URL")
+		}
 	}
 
 	params := data.URLUpdateParams{
@@ -198,6 +218,18 @@ func (c *CreateServer) DeleteURL(ctx context.Context, req *pb.DeleteURLRequest) 
 		return nil, errNoCode
 	}
 
+	// Ownership check: non-admins may only delete URLs they created.
+	if role := auth.RoleFromContext(ctx); role != "admin" {
+		rec, err := c.Store.Get(code)
+		if err != nil {
+			return nil, status.Error(codes.NotFound, "URL not found")
+		}
+		userID, ok := auth.UserIDFromContext(ctx)
+		if !ok || rec.CreatedByUserID == nil || *rec.CreatedByUserID != userID {
+			return nil, status.Error(codes.PermissionDenied, "you do not own this URL")
+		}
+	}
+
 	if err := c.Store.Delete(code); err != nil {
 		log.Error("DeleteURL", "Error", err)
 		return &pb.DeleteURLResponse{Success: false}, err
@@ -216,6 +248,13 @@ func (c *CreateServer) ListURLs(ctx context.Context, req *pb.ListURLsRequest) (*
 		Domain:   req.GetDomain(),
 		OrderBy:  req.GetOrderBy(),
 		OrderDir: req.GetOrderDir(),
+	}
+
+	// Non-admins see only their own URLs.
+	if role := auth.RoleFromContext(ctx); role != "admin" {
+		if userID, ok := auth.UserIDFromContext(ctx); ok {
+			params.UserID = &userID
+		}
 	}
 
 	result, err := c.Store.List(params)
