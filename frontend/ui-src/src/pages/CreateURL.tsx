@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { urls } from '../api/client'
 import { Copy, Check } from 'lucide-react'
+import TagInput from '../components/TagInput'
 
 export default function CreateURL() {
   const navigate = useNavigate()
@@ -14,7 +15,7 @@ export default function CreateURL() {
     redirectType: '302',
     isCrawlable: true,
     domain: '',
-    tags: '',
+    tags: [] as string[],
   })
   const [result, setResult] = useState<{ code: string } | null>(null)
   const [error, setError] = useState('')
@@ -36,7 +37,7 @@ export default function CreateURL() {
       if (form.title) data.title = form.title
       if (form.maxVisits) data.maxVisits = Number(form.maxVisits)
       if (form.domain) data.domain = form.domain
-      if (form.tags) data.tags = form.tags.split(',').map((t) => t.trim()).filter(Boolean)
+      if (form.tags.length > 0) data.tags = form.tags
 
       const res = await urls.create(data)
       setResult({ code: res.code as string })
@@ -58,9 +59,9 @@ export default function CreateURL() {
   if (result) {
     return (
       <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-green-700">URL Created!</h2>
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-green-700 dark:text-green-400">URL Created!</h2>
+          <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <code className="flex-1 text-sm font-mono text-blue-600 break-all">{shortURL}</code>
             <button
               onClick={copyURL}
@@ -80,9 +81,9 @@ export default function CreateURL() {
             <button
               onClick={() => {
                 setResult(null)
-                setForm({ ...form, longUrl: '', customSlug: '', title: '', tags: '' })
+                setForm({ ...form, longUrl: '', customSlug: '', title: '', tags: [] })
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
             >
               Create Another
             </button>
@@ -94,13 +95,13 @@ export default function CreateURL() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-4">
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Long URL <span className="text-red-500">*</span>
           </label>
           <input
@@ -109,40 +110,40 @@ export default function CreateURL() {
             onChange={(e) => setForm({ ...form, longUrl: e.target.value })}
             required
             placeholder="https://example.com/very/long/url"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Custom Slug</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Custom Slug</label>
             <input
               type="text"
               value={form.customSlug}
               onChange={(e) => setForm({ ...form, customSlug: e.target.value })}
               placeholder="my-link"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
             <input
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="My Link"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">TTL</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">TTL</label>
             <select
               value={form.ttl}
               onChange={(e) => setForm({ ...form, ttl: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             >
               <option value="0">Never expires</option>
               <option value="300">5 minutes</option>
@@ -154,25 +155,25 @@ export default function CreateURL() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Max Visits</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Visits</label>
             <input
               type="number"
               value={form.maxVisits}
               onChange={(e) => setForm({ ...form, maxVisits: e.target.value })}
               placeholder="Unlimited"
               min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Redirect Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Redirect Type</label>
             <select
               value={form.redirectType}
               onChange={(e) => setForm({ ...form, redirectType: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             >
               <option value="301">301 — Permanent</option>
               <option value="302">302 — Found (default)</option>
@@ -181,25 +182,22 @@ export default function CreateURL() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Domain</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Domain</label>
             <input
               type="text"
               value={form.domain}
               onChange={(e) => setForm({ ...form, domain: e.target.value })}
               placeholder="Optional"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-          <input
-            type="text"
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tags</label>
+          <TagInput
             value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
-            placeholder="marketing, campaign-q1 (comma separated)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            onChange={(tags) => setForm({ ...form, tags })}
           />
         </div>
 
@@ -211,7 +209,7 @@ export default function CreateURL() {
             onChange={(e) => setForm({ ...form, isCrawlable: e.target.checked })}
             className="rounded border-gray-300"
           />
-          <label htmlFor="crawlable" className="text-sm text-gray-700">
+          <label htmlFor="crawlable" className="text-sm text-gray-700 dark:text-gray-300">
             Allow search engine crawling
           </label>
         </div>

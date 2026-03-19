@@ -28,6 +28,8 @@ type Config struct {
 	// ReadyCheckers are named functions called by /readyz. A non-nil error
 	// from any checker causes the endpoint to return 503.
 	ReadyCheckers map[string]func(context.Context) error
+	// AdminHandler mounts admin/self-service REST routes outside gRPC-gateway.
+	AdminHandler *AdminHandler
 }
 
 // Run starts the REST gateway HTTP server.
@@ -61,6 +63,10 @@ func Run(ctx context.Context, cfg Config) error {
 		})
 		// Swagger UI — human-readable docs at /api/v1/docs
 		httpMux.HandleFunc("/api/v1/docs", swaggerUIHandler)
+	}
+	// Admin + self-service REST routes (outside gRPC-gateway)
+	if cfg.AdminHandler != nil {
+		cfg.AdminHandler.Register(httpMux)
 	}
 	// Liveness check — always 200 if the process is up
 	httpMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {

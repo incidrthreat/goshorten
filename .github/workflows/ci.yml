@@ -5,27 +5,19 @@ on:
     branches: ["**"]
   pull_request:
     branches: [master]
-
-# Shared condition: run the expensive steps only on PRs or master pushes.
-# Branch pushes (feature/fix/etc.) get lint only for fast feedback.
-env:
-  FULL_RUN: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
+  release:
+    types: [published]
 
 jobs:
   backend:
     name: Backend
     runs-on: ubuntu-latest
-    env:
-      APP_VERSION: dev
     defaults:
       run:
         working-directory: backend
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set version
-        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
 
       - uses: actions/setup-go@v5
         with:
@@ -39,37 +31,35 @@ jobs:
           install-mode: goinstall
           working-directory: backend
 
+      - name: Set version
+        if: github.event_name == 'release'
+        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
+
       - name: Build
-        if: env.FULL_RUN == 'true'
+        if: github.event_name == 'release'
         run: CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$APP_VERSION" -o /dev/null .
 
       - name: Test
-        if: env.FULL_RUN == 'true'
+        if: github.event_name == 'release'
         run: go test ./...
 
-      - name: Docker build (smoke)
-        if: github.ref == 'refs/heads/master'
+      - name: Docker build
+        if: github.event_name == 'release'
         uses: docker/build-push-action@v6
         with:
-          context: backend
+          context: .
           file: backend/Containerfile
           push: false
-          build-args: APP_VERSION=${{ env.APP_VERSION }}
 
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
-    env:
-      APP_VERSION: dev
     defaults:
       run:
         working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set version
-        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
 
       - uses: actions/setup-go@v5
         with:
@@ -83,22 +73,25 @@ jobs:
           install-mode: goinstall
           working-directory: frontend
 
+      - name: Set version
+        if: github.event_name == 'release'
+        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
+
       - name: Build
-        if: env.FULL_RUN == 'true'
+        if: github.event_name == 'release'
         run: CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$APP_VERSION" -o /dev/null ./cmd/...
 
       - name: Test
-        if: env.FULL_RUN == 'true'
+        if: github.event_name == 'release'
         run: go test ./...
 
-      - name: Docker build (smoke)
-        if: github.ref == 'refs/heads/master'
+      - name: Docker build
+        if: github.event_name == 'release'
         uses: docker/build-push-action@v6
         with:
-          context: frontend
+          context: .
           file: frontend/Containerfile
           push: false
-          build-args: APP_VERSION=${{ env.APP_VERSION }}
 
   ui:
     name: React UI
@@ -121,5 +114,5 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Build
-        if: env.FULL_RUN == 'true'
-        run: npm run build
+        if: github.event_name == 'release'
+        run: VITE_APP_VERSION=$(cat ../../VERSION) npm run build

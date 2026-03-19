@@ -3,6 +3,7 @@ package webapp
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -22,8 +23,8 @@ func (app *App) GetURL(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		// Code not found → send to SPA homepage
-		http.Redirect(w, r, "/?not_found="+code, http.StatusTemporaryRedirect)
+		q := url.Values{"code": {code}}
+		http.Redirect(w, r, "/expired?"+q.Encode(), http.StatusTemporaryRedirect)
 		return
 	}
 

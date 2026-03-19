@@ -11,6 +11,7 @@ export interface ShortURL {
   domain: string
   tags: string[]
   totalClicks: number
+  createdByUserId?: number
 }
 
 export interface ListURLsResponse {
@@ -92,6 +93,22 @@ export interface UserInfo {
   name: string
   role: string
   createdAt: string
+}
+
+export interface UserAdmin {
+  id: number
+  email: string
+  name: string
+  role: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface ListUsersResponse {
+  users: UserAdmin[]
+  total: number
+  page: number
+  pageSize: number
 }
 
 export interface LoginResponse {

@@ -4,19 +4,21 @@ import "time"
 
 // URLRecord represents a stored shortened URL with all metadata.
 type URLRecord struct {
-	ID           int64
-	Code         string
-	LongURL      string
-	Title        string
-	CreatedAt    time.Time
-	ExpiresAt    *time.Time
-	IsActive     bool
-	MaxVisits    *int32
-	RedirectType int32
-	IsCrawlable  bool
-	Domain       *string
-	Tags         []string
-	TotalClicks  int64
+	ID              int64
+	Code            string
+	LongURL         string
+	Title           string
+	CreatedAt       time.Time
+	ExpiresAt       *time.Time
+	IsActive        bool
+	MaxVisits       *int32
+	RedirectType    int32
+	IsCrawlable     bool
+	Domain          *string
+	Tags            []string
+	TotalClicks     int64
+	CreatedByUserID *int64
+	CreatedByEmail  string
 }
 
 // URLCreateParams holds the input for creating a short URL.
@@ -30,19 +32,21 @@ type URLCreateParams struct {
 	IsCrawlable  bool
 	Domain       *string
 	Tags         []string
+	UserID       *int64   // owner, nil = anonymous/legacy
 }
 
 // URLUpdateParams holds the input for updating a short URL.
 type URLUpdateParams struct {
-	Code         string
-	LongURL      *string  // nil = no change
-	Title        *string  // nil = no change
-	TTL          *int64   // nil = no change, -1 = never expire
-	MaxVisits    *int32   // nil = no change, -1 = unlimited
-	RedirectType *int32   // nil = no change
-	IsCrawlable  *bool    // nil = no change
-	IsActive     *bool    // nil = no change
-	Tags         []string // nil = no change, empty = clear all
+	Code           string
+	LongURL        *string  // nil = no change
+	Title          *string  // nil = no change
+	TTL            *int64   // nil = no change, -1 = never expire
+	MaxVisits      *int32   // nil = no change, -1 = unlimited
+	RedirectType   *int32   // nil = no change
+	IsCrawlable    *bool    // nil = no change
+	IsActive       *bool    // nil = no change
+	Tags           []string // nil = no change, empty = clear all
+	AssignedUserID *int64   // nil = no change, 0 = clear owner (anonymous)
 }
 
 // URLListParams holds the input for listing/filtering short URLs.
@@ -54,6 +58,7 @@ type URLListParams struct {
 	Domain   string
 	OrderBy  string // "created_at", "clicks", "code"
 	OrderDir string // "asc", "desc"
+	UserID   *int64 // nil = all (admin), non-nil = owned by this user
 }
 
 // URLListResult holds a paginated list of URL records.

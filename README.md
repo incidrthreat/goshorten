@@ -204,14 +204,16 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 8.6 CI pipeline (lint, test, build, docker image)
  - 8.7 Dockerfile optimization (multi-stage, scratch/distroless base)
 
-### [ ] Phase 8a: Improve admin panel and settings
- - 8a.1 Admin interface that allows an admin to edit any created shortened url
- - 8a.2 Add the sections under settings that allows the editing/testing of OIDC/SSO without variables
- - 8a.3 Add RBAC for users to be assigned 
+### [X] Phase 8a: Improve admin panel and set
+ - 8a.1a Add into the Admin interface a url page that is searchable allowing any admin to search and edit any shortened url. 
+ - 8a.1b Allow any user that created a link to edit their own shortened urls
+ - 8a.1c Allow shortened URLs to be assigned to different users.
+ - 8a.1d Add the ability for the Breakglass admin to change the admin password in the app and update the email.
+ - 8a.3 Add RBAC section so that an admin can CRUD or disable users and assign roles.  Any user connecting via OIDC defaults to Basic User.
 
-### [ ] Phase 8b: General UI improvements
- - 8b.1 Add dark mode toggle/option
- - 8b.2 Add the ability for users to edit their shortened urls (including tags)
+### [X] Phase 8b: General UI improvements
+ - 8b.1 Add dark mode toggle/option in the settings page that is user set and persisten
+ - 8b.2 Add the ability for users to CRUD their shortened urls (including tags)
 
 ### [ ] Phase 9: Testing
  - 9.1 Unit tests for repository layer, code generation, validation
@@ -232,3 +234,19 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 11.4 Dynamic redirects — device (separate targets for mobile, tablet, and desktop based on parsed user-agent)
  - 11.5 Dynamic redirects — time (scheduled activation windows and expiry rules beyond simple TTL)
  - 11.6 A/B redirect (weighted split across multiple target URLs with per-variant click tracking)
+
+### [ ] Phase 12: Settings, Account, and Security
+ - 12.1 Add editable profile settings so users can update their display name and email address from the Settings page.
+ - 12.2 Add account-security settings for active sessions, recent sign-in history, and the ability to sign out other devices.
+ - 12.3 Make Settings auth-aware by showing whether the account is local or OIDC-backed and what fields are IdP-managed.
+ - 12.4 Add an appearance/preferences section in Settings for persistent user-level UI options such as theme selection.
+ - 12.5 Add admin-only OIDC/SSO settings in the app for listing, creating, testing, enabling, and deleting providers without relying on env vars alone.
+ - 12.6 Consolidate admin account controls into Settings with sections for RBAC, user lifecycle management, and provider configuration.
+
+### [ ] Phase 13: Theming and Branding
+ - 13.1 Extract the frontend color system into reusable theme tokens so palettes can be swapped without rewriting component styles.
+ - 13.2 Ship a small set of curated built-in themes for the app, with at least two or three polished options beyond the default.
+ - 13.3 Let each user choose and persist their own preferred theme from Settings as an account-level preference.
+ - 13.4 Let admins configure a global default theme for the instance so new users inherit a consistent look and feel.
+ - 13.5 Add an optional admin setting to lock or strongly recommend the global theme for managed environments.
+ - 13.6 Add a theme preview/gallery in Settings so users and admins can compare palettes before applying them.
