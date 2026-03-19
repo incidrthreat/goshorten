@@ -4,14 +4,17 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import CreateURL from './pages/CreateURL'
+import EditURL from './pages/EditURL'
 import URLDetail from './pages/URLDetail'
 import Tags from './pages/Tags'
 import APIKeys from './pages/APIKeys'
 import SettingsPage from './pages/SettingsPage'
 import Preview from './pages/Preview'
+import Expired from './pages/Expired'
+import AdminUsers from './pages/admin/Users'
 
 export default function App() {
-  const { user, loading, login, logout } = useAuth()
+  const { user, loading, login, logout, checkAuth } = useAuth()
   const location = useLocation()
 
   // Public routes (no auth required)
@@ -23,9 +26,17 @@ export default function App() {
     )
   }
 
+  if (location.pathname === '/expired') {
+    return (
+      <Routes>
+        <Route path="/expired" element={<Expired />} />
+      </Routes>
+    )
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-gray-500">Loading...</div>
       </div>
     )
@@ -41,9 +52,13 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/create" element={<CreateURL />} />
         <Route path="/urls/:code" element={<URLDetail />} />
+        <Route path="/urls/:code/edit" element={<EditURL />} />
         <Route path="/tags" element={<Tags />} />
         <Route path="/api-keys" element={<APIKeys />} />
-        <Route path="/settings" element={<SettingsPage user={user} />} />
+        <Route path="/settings" element={<SettingsPage user={user} onRefreshUser={checkAuth} />} />
+        {user.role === 'admin' && (
+          <Route path="/admin/users" element={<AdminUsers />} />
+        )}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

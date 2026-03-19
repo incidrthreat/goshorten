@@ -9,8 +9,11 @@ import {
   BarChart3,
   Menu,
   X,
+  Users,
+  Moon,
+  Sun,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -18,7 +21,7 @@ interface LayoutProps {
   onLogout: () => void
 }
 
-const navItems = [
+const baseNavItems = [
   { to: '/', icon: Link2, label: 'URLs' },
   { to: '/create', icon: PlusCircle, label: 'Create' },
   { to: '/tags', icon: Tags, label: 'Tags' },
@@ -26,12 +29,37 @@ const navItems = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
+const adminNavItems = [{ to: '/admin/users', icon: Users, label: 'Users' }]
+
+function useDarkMode() {
+  const [dark, setDark] = useState(() => {
+    const stored = localStorage.getItem('darkMode')
+    if (stored !== null) return stored === 'true'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark)
+    localStorage.setItem('darkMode', String(dark))
+  }, [dark])
+
+  return [dark, setDark] as const
+}
+
 export default function Layout({ children, user, onLogout }: LayoutProps) {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [dark, setDark] = useDarkMode()
+
+  const navItems = [
+    ...baseNavItems,
+    ...(user?.role === 'admin' ? adminNavItems : []),
+  ]
+
+  const allNav = [...baseNavItems, ...adminNavItems]
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex dark:bg-gray-950">
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white transform transition-transform lg:translate-x-0 lg:static lg:flex lg:flex-col ${
@@ -98,15 +126,24 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-10 h-16 bg-white border-b border-gray-200 flex items-center px-4 lg:px-8">
+        <header className="sticky top-0 z-10 h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 lg:px-8">
           <button className="lg:hidden mr-4" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-6 h-6" />
+            <Menu className="w-6 h-6 dark:text-gray-300" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-800 truncate">
-            {navItems.find((n) => n.to === location.pathname)?.label || 'GoShorten'}
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate flex-1">
+            {allNav.find((n) => n.to === location.pathname)?.label || 'GoShorten'}
           </h1>
+          <button
+            onClick={() => setDark(!dark)}
+            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
         </header>
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 overflow-auto dark:bg-gray-950 dark:text-gray-100">
+          {children}
+        </main>
       </div>
     </div>
   )

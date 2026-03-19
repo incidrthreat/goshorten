@@ -4,12 +4,15 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
-COPY . .
-ARG APP_VERSION=dev
-RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${APP_VERSION}" -o grpc-server .
+COPY backend/ .
+COPY VERSION .
+
+ARG APP_VERSION=
+RUN VER="${APP_VERSION:-$(cat VERSION)}" && \
+    CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$VER" -o grpc-server .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o healthcheck ./healthcheck
 
 FROM gcr.io/distroless/static-debian12:nonroot

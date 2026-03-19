@@ -17,6 +17,14 @@ var reservedPaths = map[string]bool{
 	"assets":  true,
 	"favicon": true,
 	"preview": true,
+	// SPA client-side routes
+	"create":   true,
+	"urls":     true,
+	"tags":     true,
+	"api-keys": true,
+	"settings": true,
+	"admin":    true,
+	"expired":  true,
 }
 
 var codePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{3,100}$`)

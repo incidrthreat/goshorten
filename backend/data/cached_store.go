@@ -35,9 +35,13 @@ func (c *CachedStore) Load(code string) (string, error) {
 	url, err := c.Cache.Get(code).Result()
 	if err == nil {
 		log.Info("Cache Hit", "code", code)
-		go func() {
-			_, _ = c.Primary.Load(code)
-		}()
+		// Call primary synchronously to record the click and enforce max-visits /
+		// active status. If primary rejects the URL (disabled, max-visits exceeded,
+		// TTL expired) evict the stale cache entry and surface the error.
+		if _, primErr := c.Primary.Load(code); primErr != nil {
+			c.invalidate(code)
+			return "", primErr
+		}
 		return url, nil
 	}
 
