@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const version = "0.5.0"
+var version = "dev"
 
 func envOrDefault(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {

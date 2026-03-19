@@ -204,6 +204,14 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 8.6 CI pipeline (lint, test, build, docker image)
  - 8.7 Dockerfile optimization (multi-stage, scratch/distroless base)
 
+### [ ] Phase 8a: Improve admin panel and settings
+ - 8a.1 Admin interface that allows an admin to edit any created shortened url
+ - 8a.2 Add the sections under settings that allows the editing/testing of OIDC/SSO without variables
+ - 8a.3 Add RBAC for users to be assigned 
+
+### [ ] Phase 8b: General UI improvements
+ - 8b.1 Add dark mode toggle/option
+
 ### [ ] Phase 9: Testing
  - 9.1 Unit tests for repository layer, code generation, validation
  - 9.2 Integration tests against real Postgres + Redis (testcontainers-go)

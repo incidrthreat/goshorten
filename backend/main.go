@@ -21,9 +21,7 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-const (
-	version string = "0.5.0"
-)
+var version = "dev"
 
 var kaEP = keepalive.EnforcementPolicy{
 	MinTime:             5 * time.Second,

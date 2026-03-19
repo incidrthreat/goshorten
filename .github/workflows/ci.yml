@@ -15,12 +15,17 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-latest
+    env:
+      APP_VERSION: dev
     defaults:
       run:
         working-directory: backend
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set version
+        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
 
       - uses: actions/setup-go@v5
         with:
@@ -36,7 +41,7 @@ jobs:
 
       - name: Build
         if: env.FULL_RUN == 'true'
-        run: CGO_ENABLED=0 go build -ldflags="-s -w" -o /dev/null .
+        run: CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$APP_VERSION" -o /dev/null .
 
       - name: Test
         if: env.FULL_RUN == 'true'
@@ -49,16 +54,22 @@ jobs:
           context: backend
           file: backend/Containerfile
           push: false
+          build-args: APP_VERSION=${{ env.APP_VERSION }}
 
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
+    env:
+      APP_VERSION: dev
     defaults:
       run:
         working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set version
+        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
 
       - uses: actions/setup-go@v5
         with:
@@ -74,7 +85,7 @@ jobs:
 
       - name: Build
         if: env.FULL_RUN == 'true'
-        run: CGO_ENABLED=0 go build -ldflags="-s -w" -o /dev/null ./cmd/...
+        run: CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$APP_VERSION" -o /dev/null ./cmd/...
 
       - name: Test
         if: env.FULL_RUN == 'true'
@@ -87,6 +98,7 @@ jobs:
           context: frontend
           file: frontend/Containerfile
           push: false
+          build-args: APP_VERSION=${{ env.APP_VERSION }}
 
   ui:
     name: React UI
