@@ -211,6 +211,7 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
 
 ### [ ] Phase 8b: General UI improvements
  - 8b.1 Add dark mode toggle/option
+ - 8b.2 Add the ability for users to edit their shortened urls (including tags)
 
 ### [ ] Phase 9: Testing
  - 9.1 Unit tests for repository layer, code generation, validation

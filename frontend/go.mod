@@ -7,7 +7,7 @@ toolchain go1.24.2
 require (
 	github.com/hashicorp/go-hclog v0.14.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 )
 
