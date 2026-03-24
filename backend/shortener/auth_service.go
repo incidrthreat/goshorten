@@ -5,10 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/incidrthreat/goshorten/backend/auth"
 	pb "github.com/incidrthreat/goshorten/backend/pb"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -39,13 +42,19 @@ func (s *AuthServer) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Login
 	}
 
 	if !auth.CheckPassword(req.GetPassword(), *user.PasswordHash) {
+		s.AuthStore.LogSignIn(ctx, &user.ID, clientIP(ctx), clientUA(ctx), false)
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
 
-	token, err := s.JWTMgr.Generate(user.ID, user.Email, user.Role)
+	token, jti, err := s.JWTMgr.Generate(user.ID, user.Email, user.Role)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate token")
 	}
+
+	expiry := time.Now().Add(time.Duration(s.JWTMgr.ExpiryHr) * time.Hour)
+	ip, ua := clientIP(ctx), clientUA(ctx)
+	_ = s.AuthStore.CreateSession(ctx, jti, user.ID, ip, ua, sessionLabel(ua), expiry)
+	s.AuthStore.LogSignIn(ctx, &user.ID, ip, ua, true)
 
 	return &pb.LoginResponse{
 		Token: token,
@@ -129,10 +138,15 @@ func (s *AuthServer) OIDCCallback(ctx context.Context, req *pb.OIDCCallbackReque
 		return nil, status.Error(codes.PermissionDenied, "account disabled")
 	}
 
-	token, err := s.JWTMgr.Generate(user.ID, user.Email, user.Role)
+	token, jti, err := s.JWTMgr.Generate(user.ID, user.Email, user.Role)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate token")
 	}
+
+	expiry := time.Now().Add(time.Duration(s.JWTMgr.ExpiryHr) * time.Hour)
+	ip, ua := clientIP(ctx), clientUA(ctx)
+	_ = s.AuthStore.CreateSession(ctx, jti, user.ID, ip, ua, sessionLabel(ua), expiry)
+	s.AuthStore.LogSignIn(ctx, &user.ID, ip, ua, true)
 
 	return &pb.LoginResponse{
 		Token: token,
@@ -341,4 +355,66 @@ func generateState() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// clientIP extracts the client IP from gRPC metadata (forwarded by the gateway).
+func clientIP(ctx context.Context) string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ""
+	}
+	for _, key := range []string{"x-real-ip", "x-forwarded-for"} {
+		if vals := md.Get(key); len(vals) > 0 {
+			// x-forwarded-for may be a comma-separated list; take the first
+			return strings.TrimSpace(strings.SplitN(vals[0], ",", 2)[0])
+		}
+	}
+	return ""
+}
+
+// clientUA extracts the User-Agent from gRPC metadata.
+func clientUA(ctx context.Context) string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ""
+	}
+	if vals := md.Get("user-agent"); len(vals) > 0 {
+		return vals[0]
+	}
+	return ""
+}
+
+// sessionLabel derives a short human-readable label from a user-agent string.
+func sessionLabel(ua string) string {
+	ua = strings.ToLower(ua)
+	browser := "Unknown browser"
+	os := "Unknown OS"
+
+	switch {
+	case strings.Contains(ua, "edg/"):
+		browser = "Edge"
+	case strings.Contains(ua, "chrome"):
+		browser = "Chrome"
+	case strings.Contains(ua, "firefox"):
+		browser = "Firefox"
+	case strings.Contains(ua, "safari"):
+		browser = "Safari"
+	case strings.Contains(ua, "curl"):
+		browser = "curl"
+	}
+
+	switch {
+	case strings.Contains(ua, "windows"):
+		os = "Windows"
+	case strings.Contains(ua, "mac os"):
+		os = "macOS"
+	case strings.Contains(ua, "linux"):
+		os = "Linux"
+	case strings.Contains(ua, "android"):
+		os = "Android"
+	case strings.Contains(ua, "ios") || strings.Contains(ua, "iphone"):
+		os = "iOS"
+	}
+
+	return browser + " on " + os
 }

@@ -29,10 +29,11 @@ type RedisConf struct {
 
 // AuthConf - authentication configuration
 type AuthConf struct {
-	JWTSecret      string `json:"jwt_secret"`
-	AdminEmail     string `json:"admin_email"`
-	AdminPassword  string `json:"admin_password"`
-	TokenExpiryHrs int    `json:"token_expiry_hours"`
+	JWTSecret            string `json:"jwt_secret"`
+	AdminEmail           string `json:"admin_email"`
+	AdminPassword        string `json:"admin_password"`
+	TokenExpiryHrs       int    `json:"token_expiry_hours"`
+	DisablePasswordLogin bool   `json:"disable_password_login"`
 }
 
 // GatewayConf - REST API gateway configuration
@@ -78,6 +79,15 @@ func (a AuthConf) GetAdminPassword() string {
 		return env
 	}
 	return a.AdminPassword
+}
+
+// GetDisablePasswordLogin returns true if password login should be disabled.
+// GOSHORTEN_DISABLE_PASSWORD_LOGIN=true overrides the JSON config value.
+func (a AuthConf) GetDisablePasswordLogin() bool {
+	if v := os.Getenv("GOSHORTEN_DISABLE_PASSWORD_LOGIN"); v != "" {
+		return v == "true" || v == "1" || v == "yes"
+	}
+	return a.DisablePasswordLogin
 }
 
 // GetTokenExpiry returns the token expiry in hours, defaulting to 24.
