@@ -94,6 +94,13 @@ func (m *OIDCManager) GetProvider(name string) (*OIDCProviderInstance, bool) {
 	return p, ok
 }
 
+// UnregisterProvider removes a provider from the in-memory registry.
+func (m *OIDCManager) UnregisterProvider(name string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.providers, name)
+}
+
 // ListProviders returns the names of all registered providers.
 func (m *OIDCManager) ListProviders() []string {
 	m.mu.RLock()

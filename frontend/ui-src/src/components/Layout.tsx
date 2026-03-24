@@ -12,13 +12,16 @@ import {
   Users,
   Moon,
   Sun,
+  ShieldCheck,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface LayoutProps {
   children: React.ReactNode
   user: { email: string; role: string } | null
   onLogout: () => void
+  theme: string
+  onSetTheme: (t: string) => void
 }
 
 const baseNavItems = [
@@ -29,27 +32,22 @@ const baseNavItems = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
-const adminNavItems = [{ to: '/admin/users', icon: Users, label: 'Users' }]
+const adminNavItems = [
+  { to: '/admin/users', icon: Users, label: 'Users' },
+  { to: '/admin/oidc-providers', icon: ShieldCheck, label: 'SSO Providers' },
+]
 
-function useDarkMode() {
-  const [dark, setDark] = useState(() => {
-    const stored = localStorage.getItem('darkMode')
-    if (stored !== null) return stored === 'true'
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  })
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('darkMode', String(dark))
-  }, [dark])
-
-  return [dark, setDark] as const
-}
-
-export default function Layout({ children, user, onLogout }: LayoutProps) {
+export default function Layout({ children, user, onLogout, theme, onSetTheme }: LayoutProps) {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [dark, setDark] = useDarkMode()
+
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+  const toggleTheme = () => {
+    onSetTheme(isDark ? 'light' : 'dark')
+  }
 
   const navItems = [
     ...baseNavItems,
@@ -134,11 +132,11 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
             {allNav.find((n) => n.to === location.pathname)?.label || 'GoShorten'}
           </h1>
           <button
-            onClick={() => setDark(!dark)}
+            onClick={toggleTheme}
             className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
         </header>
         <main className="flex-1 p-4 lg:p-8 overflow-auto dark:bg-gray-950 dark:text-gray-100">

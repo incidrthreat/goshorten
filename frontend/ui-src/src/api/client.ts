@@ -51,6 +51,36 @@ export const auth = {
       method: 'PATCH',
       body: JSON.stringify(params),
     }),
+  account: () =>
+    request<{ id: string; email: string; name: string; role: string; isOIDC: boolean; oidcProvider: string; theme: string }>('/auth/account'),
+  updatePreferences: (params: { theme?: string }) =>
+    request<{ status: string }>('/auth/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify(params),
+    }),
+  sessions: {
+    list: () =>
+      request<{ sessions: Array<{ id: string; label: string; ipAddress: string; createdAt: string; expiresAt: string; isCurrent: boolean }> }>('/auth/sessions'),
+    revokeAll: () =>
+      request<{ revoked: number }>('/auth/sessions', { method: 'DELETE' }),
+    revoke: (id: string) =>
+      request<{ status: string }>(`/auth/sessions/${id}`, { method: 'DELETE' }),
+  },
+  signInHistory: () =>
+    request<{ events: Array<{ ipAddress: string; userAgent: string; success: boolean; signedInAt: string }> }>('/auth/sign-in-history'),
+  config: () =>
+    request<{ passwordLoginEnabled: boolean; envOverride: boolean }>('/auth/config'),
+  oidc: {
+    providers: () =>
+      request<{ providers: Array<{ id: number; name: string; issuerUrl: string; isEnabled: boolean; autoRegister: boolean; defaultRole: string }> }>('/auth/oidc/providers'),
+    authUrl: (providerName: string) =>
+      request<{ authUrl: string; state: string }>(`/auth/oidc/${encodeURIComponent(providerName)}/authorize`),
+    callback: (providerName: string, code: string, state: string) =>
+      request<{ token: string; user: { id: string; email: string; name: string; role: string } }>(`/auth/oidc/${encodeURIComponent(providerName)}/callback`, {
+        method: 'POST',
+        body: JSON.stringify({ code, state }),
+      }),
+  },
 }
 
 // --- Admin ---
@@ -99,6 +129,31 @@ export const admin = {
       request<{ status: string }>(`/admin/short-urls/${code}`, {
         method: 'PATCH',
         body: JSON.stringify({ assignedUserId }),
+      }),
+  },
+  oidcProviders: {
+    list: () =>
+      request<{ providers: Array<{ id: number; name: string; issuerUrl: string; clientId: string; redirectUri: string; scopes: string; isEnabled: boolean; autoRegister: boolean; defaultRole: string }> }>('/admin/oidc-providers'),
+    create: (params: { name: string; issuerUrl: string; clientId: string; clientSecret?: string; redirectUri?: string; scopes?: string; autoRegister?: boolean; defaultRole?: string }) =>
+      request<Record<string, unknown>>('/admin/oidc-providers', {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }),
+    update: (name: string, params: { isEnabled?: boolean; autoRegister?: boolean; defaultRole?: string; clientSecret?: string }) =>
+      request<Record<string, unknown>>(`/admin/oidc-providers/${name}`, {
+        method: 'PATCH',
+        body: JSON.stringify(params),
+      }),
+    delete: (name: string) =>
+      request<{ status: string }>(`/admin/oidc-providers/${name}`, { method: 'DELETE' }),
+  },
+  settings: {
+    get: () =>
+      request<{ passwordLoginEnabled: boolean; envOverride: boolean }>('/admin/settings'),
+    update: (params: { passwordLoginEnabled?: boolean }) =>
+      request<{ status: string }>('/admin/settings', {
+        method: 'PATCH',
+        body: JSON.stringify(params),
       }),
   },
 }

@@ -99,11 +99,11 @@ func Run(ctx context.Context, cfg Config) error {
 	return nil
 }
 
-// customHeaderMatcher forwards the Authorization header from HTTP to gRPC metadata.
+// customHeaderMatcher forwards auth and client-identity headers from HTTP to gRPC metadata.
 func customHeaderMatcher(key string) (string, bool) {
 	switch strings.ToLower(key) {
-	case "authorization":
-		return "authorization", true
+	case "authorization", "x-forwarded-for", "x-real-ip", "user-agent":
+		return strings.ToLower(key), true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

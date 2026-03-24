@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -31,12 +33,19 @@ func NewJWTManager(secret string, expiryHours int) *JWTManager {
 }
 
 // Generate creates a signed JWT for the given user.
-func (m *JWTManager) Generate(userID int64, email, role string) (string, error) {
+// Returns (tokenString, jti, error). The jti uniquely identifies this session.
+func (m *JWTManager) Generate(userID int64, email, role string) (string, string, error) {
+	jti, err := generateJTI()
+	if err != nil {
+		return "", "", fmt.Errorf("generate jti: %w", err)
+	}
+
 	claims := &Claims{
 		UserID: userID,
 		Email:  email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        jti,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(m.ExpiryHr) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "goshorten",
@@ -46,9 +55,17 @@ func (m *JWTManager) Generate(userID int64, email, role string) (string, error) 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString(m.Secret)
 	if err != nil {
-		return "", fmt.Errorf("sign jwt: %w", err)
+		return "", "", fmt.Errorf("sign jwt: %w", err)
 	}
-	return signed, nil
+	return signed, jti, nil
+}
+
+func generateJTI() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 // Verify parses and validates a JWT, returning the claims.

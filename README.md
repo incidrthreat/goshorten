@@ -235,7 +235,7 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 11.5 Dynamic redirects — time (scheduled activation windows and expiry rules beyond simple TTL)
  - 11.6 A/B redirect (weighted split across multiple target URLs with per-variant click tracking)
 
-### [ ] Phase 12: Settings, Account, and Security
+### [X] Phase 12: Settings, Account, and Security
  - 12.1 Add editable profile settings so users can update their display name and email address from the Settings page.
  - 12.2 Add account-security settings for active sessions, recent sign-in history, and the ability to sign out other devices.
  - 12.3 Make Settings auth-aware by showing whether the account is local or OIDC-backed and what fields are IdP-managed.

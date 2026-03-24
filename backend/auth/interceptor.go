@@ -13,8 +13,9 @@ import (
 type contextKey string
 
 const (
-	UserContextKey contextKey = "auth_user"
-	RoleContextKey contextKey = "auth_role"
+	UserContextKey    contextKey = "auth_user"
+	RoleContextKey    contextKey = "auth_role"
+	SessionIDKey      contextKey = "auth_session_id"
 )
 
 // AuthInterceptor validates authentication on gRPC calls.
@@ -36,6 +37,7 @@ func NewAuthInterceptor(jwtMgr *JWTManager, store *AuthStore) *AuthInterceptor {
 			"/Shortener/GetURL":      true, // Redirects must be unauthenticated
 			"/Shortener/PreviewURL":  true, // Public link preview (code+)
 			"/Auth/Login":             true,
+			"/Auth/OIDCAuthURL":       true, // Must be public — called before login to get redirect URL
 			"/Auth/OIDCCallback":      true,
 			"/Auth/ListOIDCProviders": true,
 		},
@@ -85,6 +87,14 @@ func (i *AuthInterceptor) authorize(ctx context.Context, method string) (context
 			return ctx, status.Error(codes.Unauthenticated, "invalid token")
 		}
 
+		// If the token carries a JTI, verify the session is still active.
+		if jti := claims.RegisteredClaims.ID; jti != "" {
+			ok, err := i.AuthStore.ValidateSession(ctx, jti)
+			if err != nil || !ok {
+				return ctx, status.Error(codes.Unauthenticated, "session expired or revoked")
+			}
+		}
+
 		// Check admin requirement
 		if i.AdminMethods[method] && claims.Role != "admin" {
 			return ctx, status.Error(codes.PermissionDenied, "admin access required")
@@ -92,6 +102,7 @@ func (i *AuthInterceptor) authorize(ctx context.Context, method string) (context
 
 		ctx = context.WithValue(ctx, UserContextKey, claims.UserID)
 		ctx = context.WithValue(ctx, RoleContextKey, claims.Role)
+		ctx = context.WithValue(ctx, SessionIDKey, claims.RegisteredClaims.ID)
 		return ctx, nil
 	}
 
@@ -131,6 +142,12 @@ func UserIDFromContext(ctx context.Context) (int64, bool) {
 func RoleFromContext(ctx context.Context) string {
 	role, _ := ctx.Value(RoleContextKey).(string)
 	return role
+}
+
+// SessionIDFromContext extracts the JWT ID (session ID) from context.
+func SessionIDFromContext(ctx context.Context) string {
+	id, _ := ctx.Value(SessionIDKey).(string)
+	return id
 }
 
 func hasScope(keyScopes, required string) bool {

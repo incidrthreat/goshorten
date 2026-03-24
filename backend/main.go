@@ -179,9 +179,11 @@ func main() {
 				"redis":    func(ctx context.Context) error { return redisClient.Ping().Err() },
 			},
 			AdminHandler: &gateway.AdminHandler{
-				AuthStore: authStore,
-				JWTMgr:   jwtMgr,
-				URLStore:  store,
+				AuthStore:            authStore,
+				JWTMgr:               jwtMgr,
+				URLStore:             store,
+				OIDCMgr:              oidcMgr,
+				DisablePasswordLogin: conf.Auth.GetDisablePasswordLogin(),
 			},
 		}
 		go func() {
