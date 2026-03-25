@@ -116,14 +116,68 @@ Note: To view statistics of your code, append a `+` to the end of the uri.
 
 ___________________________
 ## Screenshots
-#### Home Page
-![Home Page](/screenshots/homepageV1.0.2.png)
-#### Successful Code creation
-![Success!](/screenshots/successfulcodeV1.0.2.png)
-#### Invalid Code retreival
-![Invalid](/screenshots/invalidcodeV1.0.2.png)
-#### Statistics of generated code
-![Invalid](/screenshots/successfulStatsV1.0.4.PNG)
+GoShorten includes a responsive React dashboard for day-to-day link management, account security, API access, and administrative workflows. The gallery below highlights the current desktop and mobile experience.
+
+### Dashboard
+<table>
+  <tr>
+    <td align="center"><strong>Desktop</strong></td>
+    <td align="center"><strong>Mobile</strong></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/dashboard-desktop.png" alt="GoShorten dashboard on desktop" width="100%" /></td>
+    <td align="center"><img src="screenshots/dashboard-mobile.png" alt="GoShorten dashboard on mobile" width="260" /></td>
+  </tr>
+</table>
+
+### Link Management
+<table>
+  <tr>
+    <td align="center"><strong>Create URL</strong></td>
+    <td align="center"><strong>Tags</strong></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/create-desktop.png" alt="Create URL page on desktop" width="100%" /></td>
+    <td><img src="screenshots/tags-desktop.png" alt="Tags page on desktop" width="100%" /></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/create-mobile.png" alt="Create URL page on mobile" width="240" /></td>
+    <td align="center"><img src="screenshots/tags-mobile.png" alt="Tags page on mobile" width="240" /></td>
+  </tr>
+</table>
+
+### Account & API Access
+<table>
+  <tr>
+    <td align="center"><strong>Settings</strong></td>
+    <td align="center"><strong>API Keys</strong></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/settings-desktop.png" alt="Settings page on desktop" width="100%" /></td>
+    <td><img src="screenshots/api-keys-desktop.png" alt="API keys page on desktop" width="100%" /></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/settings-mobile.png" alt="Settings page on mobile" width="240" /></td>
+    <td align="center"><img src="screenshots/api-keys-mobile.png" alt="API keys page on mobile" width="240" /></td>
+  </tr>
+</table>
+
+### Administration
+<table>
+  <tr>
+    <td align="center"><strong>User Management</strong></td>
+    <td align="center"><strong>OIDC Providers</strong></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/admin-users-desktop.png" alt="Admin users page on desktop" width="100%" /></td>
+    <td><img src="screenshots/admin-oidc-providers-desktop.png" alt="Admin OIDC providers page on desktop" width="100%" /></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/admin-users-mobile.png" alt="Admin users page on mobile" width="240" /></td>
+    <td align="center"><img src="screenshots/admin-oidc-providers-mobile.png" alt="Admin OIDC providers page on mobile" width="240" /></td>
+  </tr>
+</table>
+
 __________________________
 ## Contributing
 
@@ -250,3 +304,4 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 13.4 Let admins configure a global default theme for the instance so new users inherit a consistent look and feel.
  - 13.5 Add an optional admin setting to lock or strongly recommend the global theme for managed environments.
  - 13.6 Add a theme preview/gallery in Settings so users and admins can compare palettes before applying them.
+
