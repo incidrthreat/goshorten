@@ -46,8 +46,8 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/goshorten-backend:${{ env.APP_VERSION }}-amd64
             ghcr.io/${{ github.repository_owner }}/goshorten-backend:latest-amd64
           build-args: APP_VERSION=${{ env.APP_VERSION }}
-          cache-from: type=gha,scope=backend-amd64
-          cache-to: type=gha,mode=max,scope=backend-amd64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-backend:cache-amd64
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-backend:cache-amd64,mode=max,image-manifest=true,oci-mediatypes=true
 
       - name: Build and push backend (arm64)
         uses: docker/build-push-action@v6
@@ -60,8 +60,8 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/goshorten-backend:${{ env.APP_VERSION }}-arm64
             ghcr.io/${{ github.repository_owner }}/goshorten-backend:latest-arm64
           build-args: APP_VERSION=${{ env.APP_VERSION }}
-          cache-from: type=gha,scope=backend-arm64
-          cache-to: type=gha,mode=max,scope=backend-arm64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-backend:cache-arm64
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-backend:cache-arm64,mode=max,image-manifest=true,oci-mediatypes=true
 
       - name: Create backend multi-arch manifest
         run: |
@@ -84,8 +84,8 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/goshorten-frontend:${{ env.APP_VERSION }}-amd64
             ghcr.io/${{ github.repository_owner }}/goshorten-frontend:latest-amd64
           build-args: APP_VERSION=${{ env.APP_VERSION }}
-          cache-from: type=gha,scope=frontend-amd64
-          cache-to: type=gha,mode=max,scope=frontend-amd64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-frontend:cache-amd64
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-frontend:cache-amd64,mode=max,image-manifest=true,oci-mediatypes=true
 
       - name: Build and push frontend (arm64)
         uses: docker/build-push-action@v6
@@ -98,8 +98,8 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/goshorten-frontend:${{ env.APP_VERSION }}-arm64
             ghcr.io/${{ github.repository_owner }}/goshorten-frontend:latest-arm64
           build-args: APP_VERSION=${{ env.APP_VERSION }}
-          cache-from: type=gha,scope=frontend-arm64
-          cache-to: type=gha,mode=max,scope=frontend-arm64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-frontend:cache-arm64
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/goshorten-frontend:cache-arm64,mode=max,image-manifest=true,oci-mediatypes=true
 
       - name: Create frontend multi-arch manifest
         run: |
