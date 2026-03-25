@@ -38,8 +38,8 @@ jobs:
       - name: Build and push backend (amd64)
         uses: docker/build-push-action@v6
         with:
-          context: backend
-          file: backend/Dockerfile
+          context: .
+          file: backend/Containerfile
           platforms: linux/amd64
           push: true
           tags: |
@@ -52,8 +52,8 @@ jobs:
       - name: Build and push backend (arm64)
         uses: docker/build-push-action@v6
         with:
-          context: backend
-          file: backend/Dockerfile
+          context: .
+          file: backend/Containerfile
           platforms: linux/arm64
           push: true
           tags: |
@@ -76,8 +76,8 @@ jobs:
       - name: Build and push frontend (amd64)
         uses: docker/build-push-action@v6
         with:
-          context: frontend
-          file: frontend/Dockerfile
+          context: .
+          file: frontend/Containerfile
           platforms: linux/amd64
           push: true
           tags: |
@@ -90,8 +90,8 @@ jobs:
       - name: Build and push frontend (arm64)
         uses: docker/build-push-action@v6
         with:
-          context: frontend
-          file: frontend/Dockerfile
+          context: .
+          file: frontend/Containerfile
           platforms: linux/arm64
           push: true
           tags: |
@@ -108,3 +108,4 @@ jobs:
             -t ghcr.io/${{ github.repository_owner }}/goshorten-frontend:latest \
             ghcr.io/${{ github.repository_owner }}/goshorten-frontend:${{ env.APP_VERSION }}-amd64 \
             ghcr.io/${{ github.repository_owner }}/goshorten-frontend:${{ env.APP_VERSION }}-arm64
+

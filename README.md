@@ -202,7 +202,7 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
  - 8.4 Graceful shutdown (drain connections, flush writes)
  - 8.5 Configuration via env vars (12-factor app) alongside config file
  - 8.6 CI pipeline (lint, test, build, docker image)
- - 8.7 Dockerfile optimization (multi-stage, scratch/distroless base)
+ - 8.7 Containerfile optimization (multi-stage, scratch/distroless base)
 
 ### [X] Phase 8a: Improve admin panel and set
  - 8a.1a Add into the Admin interface a url page that is searchable allowing any admin to search and edit any shortened url. 
