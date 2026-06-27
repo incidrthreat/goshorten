@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master]
+  release:
+    types: [published]
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          install-mode: goinstall
+          working-directory: backend
+
+      - name: Set version
+        if: github.event_name == 'release'
+        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
+
+      - name: Build
+        if: github.event_name == 'release'
+        run: CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$APP_VERSION" -o /dev/null .
+
+      - name: Test
+        if: github.event_name == 'release'
+        run: go test ./...
+
+      - name: Docker build
+        if: github.event_name == 'release'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Containerfile
+          push: false
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: frontend/go.mod
+          cache-dependency-path: frontend/go.sum
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          install-mode: goinstall
+          working-directory: frontend
+
+      - name: Set version
+        if: github.event_name == 'release'
+        run: echo "APP_VERSION=$(cat ../VERSION)" >> $GITHUB_ENV
+
+      - name: Build
+        if: github.event_name == 'release'
+        run: CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$APP_VERSION" -o /dev/null ./cmd/...
+
+      - name: Test
+        if: github.event_name == 'release'
+        run: go test ./...
+
+      - name: Docker build
+        if: github.event_name == 'release'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Containerfile
+          push: false
+
+  ui:
+    name: React UI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/ui-src
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        run: npm install
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build
+        if: github.event_name == 'release'
+        run: VITE_APP_VERSION=$(cat ../../VERSION) npm run build

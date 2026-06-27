@@ -1,0 +1,43 @@
+# Environment / secrets
+.env
+*.env
+config.json
+
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+grpc-client
+goshorten
+
+# Frontend build output
+frontend/dist/
+frontend/.cache/
+
+# Node
+frontend/ui-src/node_modules/
+frontend/ui-src/package-lock.json
+
+# TLS certs / keys
+*.crt
+*.csr
+*.key
+*.pem
+backend/server.*
+frontend/server.*
+collision_tests/server.*
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

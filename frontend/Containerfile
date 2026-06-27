@@ -1,0 +1,41 @@
+FROM node:22-alpine AS frontend
+
+WORKDIR /build
+
+COPY frontend/ui-src/package.json frontend/ui-src/package-lock.json* ./
+RUN npm install
+
+COPY frontend/ui-src/ .
+COPY VERSION /tmp/VERSION
+
+ARG APP_VERSION=
+RUN VITE_APP_VERSION="${APP_VERSION:-$(cat /tmp/VERSION)}" npx vite build --outDir /dist
+
+FROM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+COPY frontend/go.mod frontend/go.sum ./
+RUN go mod download
+
+COPY frontend/ .
+COPY VERSION .
+
+ARG APP_VERSION=
+RUN VER="${APP_VERSION:-$(cat VERSION)}" && \
+    CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$VER" -o grpc-client ./cmd/*
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o healthcheck ./healthcheck
+
+FROM gcr.io/distroless/static-debian12:nonroot
+
+WORKDIR /app
+
+COPY --from=builder /app/grpc-client .
+COPY --from=builder /app/healthcheck .
+COPY --from=frontend /dist/ ./dist/
+
+EXPOSE 8081
+
+CMD ["./grpc-client"]

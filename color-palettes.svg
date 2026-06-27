@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1220" viewBox="0 0 1600 1220" role="img" aria-labelledby="title desc">
+  <title id="title">Modern color palette swatches</title>
+  <desc id="desc">Four modern UI color palettes with background, surface, text, primary, accent, muted, and success colors.</desc>
+
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="20" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .title { font: 700 34px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 17px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .card-title { font: 700 24px 'Segoe UI', Arial, sans-serif; }
+      .card-copy { font: 400 14px 'Segoe UI', Arial, sans-serif; }
+      .label { font: 600 13px 'Segoe UI', Arial, sans-serif; fill: #475569; letter-spacing: 0.04em; }
+      .value { font: 700 14px 'Consolas', 'Courier New', monospace; fill: #0f172a; }
+      .ui-title { font: 700 15px 'Segoe UI', Arial, sans-serif; }
+      .ui-copy { font: 400 12px 'Segoe UI', Arial, sans-serif; }
+      .button { font: 700 13px 'Segoe UI', Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1220" fill="#e2e8f0"/>
+  <rect x="24" y="24" width="1552" height="1172" rx="28" fill="#f8fafc"/>
+
+  <text x="70" y="100" class="title">Modern Palette Swatches</text>
+  <text x="70" y="132" class="subtitle">Single-file SVG preview of four color directions for dashboards and product UI.</text>
+
+  <g transform="translate(60,170)" filter="url(#shadow)">
+    <rect x="0" y="0" width="700" height="450" rx="26" fill="#F6F8FB"/>
+    <rect x="32" y="32" width="636" height="386" rx="22" fill="#FFFFFF" opacity="0.92"/>
+    <text x="52" y="74" class="card-title" fill="#0F172A">Soft Slate + Cobalt + Mint</text>
+    <text x="52" y="100" class="card-copy" fill="#64748B">Trustworthy, clear, and calm with a fresh accent.</text>
+
+    <rect x="52" y="126" width="86" height="74" rx="18" fill="#F6F8FB" stroke="#CBD5E1"/>
+    <text x="52" y="218" class="label">BACKGROUND</text>
+    <text x="52" y="238" class="value">#F6F8FB</text>
+
+    <rect x="166" y="126" width="86" height="74" rx="18" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="166" y="218" class="label">SURFACE</text>
+    <text x="166" y="238" class="value">#FFFFFF</text>
+
+    <rect x="280" y="126" width="86" height="74" rx="18" fill="#0F172A"/>
+    <text x="280" y="218" class="label">TEXT</text>
+    <text x="280" y="238" class="value">#0F172A</text>
+
+    <rect x="394" y="126" width="86" height="74" rx="18" fill="#2563EB"/>
+    <text x="394" y="218" class="label">PRIMARY</text>
+    <text x="394" y="238" class="value">#2563EB</text>
+
+    <rect x="508" y="126" width="86" height="74" rx="18" fill="#14B8A6"/>
+    <text x="508" y="218" class="label">ACCENT</text>
+    <text x="508" y="238" class="value">#14B8A6</text>
+
+    <rect x="52" y="282" width="596" height="106" rx="20" fill="#FFFFFF" stroke="#D7E0EA"/>
+    <text x="78" y="316" class="ui-title" fill="#0F172A">Sample UI Card</text>
+    <text x="78" y="338" class="ui-copy" fill="#64748B">Steady blue for actions, mint for freshness, low-friction contrast.</text>
+    <rect x="78" y="353" width="96" height="24" rx="12" fill="#E0F2FE"/>
+    <text x="103" y="369" class="ui-copy" fill="#0369A1">Active</text>
+    <rect x="500" y="345" width="124" height="34" rx="17" fill="#2563EB"/>
+    <text x="538" y="367" class="button" fill="#FFFFFF">Continue</text>
+  </g>
+
+  <g transform="translate(840,170)" filter="url(#shadow)">
+    <rect x="0" y="0" width="700" height="450" rx="26" fill="#FAF7F2"/>
+    <rect x="32" y="32" width="636" height="386" rx="22" fill="#FFFFFF" opacity="0.96"/>
+    <text x="52" y="74" class="card-title" fill="#1F2937">Warm Sand + Teal + Coral</text>
+    <text x="52" y="100" class="card-copy" fill="#6B7280">Approachable, human, and slightly warmer than standard SaaS blue.</text>
+
+    <rect x="52" y="126" width="86" height="74" rx="18" fill="#FAF7F2" stroke="#D6D3D1"/>
+    <text x="52" y="218" class="label">BACKGROUND</text>
+    <text x="52" y="238" class="value">#FAF7F2</text>
+
+    <rect x="166" y="126" width="86" height="74" rx="18" fill="#FFFFFF" stroke="#D6D3D1"/>
+    <text x="166" y="218" class="label">SURFACE</text>
+    <text x="166" y="238" class="value">#FFFFFF</text>
+
+    <rect x="280" y="126" width="86" height="74" rx="18" fill="#1F2937"/>
+    <text x="280" y="218" class="label">TEXT</text>
+    <text x="280" y="238" class="value">#1F2937</text>
+
+    <rect x="394" y="126" width="86" height="74" rx="18" fill="#0F766E"/>
+    <text x="394" y="218" class="label">PRIMARY</text>
+    <text x="394" y="238" class="value">#0F766E</text>
+
+    <rect x="508" y="126" width="86" height="74" rx="18" fill="#F97316"/>
+    <text x="508" y="218" class="label">ACCENT</text>
+    <text x="508" y="238" class="value">#F97316</text>
+
+    <rect x="52" y="282" width="596" height="106" rx="20" fill="#FFFDFC" stroke="#E7E0D8"/>
+    <text x="78" y="316" class="ui-title" fill="#1F2937">Sample UI Card</text>
+    <text x="78" y="338" class="ui-copy" fill="#6B7280">Warmer background tones make the app feel less clinical.</text>
+    <rect x="78" y="353" width="116" height="24" rx="12" fill="#FEF3C7"/>
+    <text x="102" y="369" class="ui-copy" fill="#B45309">Friendly tone</text>
+    <rect x="500" y="345" width="124" height="34" rx="17" fill="#0F766E"/>
+    <text x="537" y="367" class="button" fill="#FFFFFF">Save</text>
+  </g>
+
+  <g transform="translate(60,670)" filter="url(#shadow)">
+    <rect x="0" y="0" width="700" height="450" rx="26" fill="#F7F7F5"/>
+    <rect x="32" y="32" width="636" height="386" rx="22" fill="#FFFFFF" opacity="0.96"/>
+    <text x="52" y="74" class="card-title" fill="#1C1917">Stone + Forest + Amber</text>
+    <text x="52" y="100" class="card-copy" fill="#78716C">Grounded, mature, and calm without feeling stale.</text>
+
+    <rect x="52" y="126" width="86" height="74" rx="18" fill="#F7F7F5" stroke="#D6D3D1"/>
+    <text x="52" y="218" class="label">BACKGROUND</text>
+    <text x="52" y="238" class="value">#F7F7F5</text>
+
+    <rect x="166" y="126" width="86" height="74" rx="18" fill="#FFFFFF" stroke="#D6D3D1"/>
+    <text x="166" y="218" class="label">SURFACE</text>
+    <text x="166" y="238" class="value">#FFFFFF</text>
+
+    <rect x="280" y="126" width="86" height="74" rx="18" fill="#1C1917"/>
+    <text x="280" y="218" class="label">TEXT</text>
+    <text x="280" y="238" class="value">#1C1917</text>
+
+    <rect x="394" y="126" width="86" height="74" rx="18" fill="#166534"/>
+    <text x="394" y="218" class="label">PRIMARY</text>
+    <text x="394" y="238" class="value">#166534</text>
+
+    <rect x="508" y="126" width="86" height="74" rx="18" fill="#D97706"/>
+    <text x="508" y="218" class="label">ACCENT</text>
+    <text x="508" y="238" class="value">#D97706</text>
+
+    <rect x="52" y="282" width="596" height="106" rx="20" fill="#FFFEFD" stroke="#E7E2DB"/>
+    <text x="78" y="316" class="ui-title" fill="#1C1917">Sample UI Card</text>
+    <text x="78" y="338" class="ui-copy" fill="#78716C">Forest green suggests stability, amber adds warmth and focus.</text>
+    <rect x="78" y="353" width="110" height="24" rx="12" fill="#DCFCE7"/>
+    <text x="102" y="369" class="ui-copy" fill="#166534">Balanced</text>
+    <rect x="500" y="345" width="124" height="34" rx="17" fill="#166534"/>
+    <text x="536" y="367" class="button" fill="#FFFFFF">Publish</text>
+  </g>
+
+  <g transform="translate(840,670)" filter="url(#shadow)">
+    <rect x="0" y="0" width="700" height="450" rx="26" fill="#0B1220"/>
+    <rect x="32" y="32" width="636" height="386" rx="22" fill="#111827" opacity="0.98"/>
+    <text x="52" y="74" class="card-title" fill="#E5E7EB">Charcoal + Ice Blue + Emerald</text>
+    <text x="52" y="100" class="card-copy" fill="#94A3B8">Focused dark mode with clean contrast and restrained color pops.</text>
+
+    <rect x="52" y="126" width="86" height="74" rx="18" fill="#0B1220" stroke="#334155"/>
+    <text x="52" y="218" class="label" fill="#94A3B8">BACKGROUND</text>
+    <text x="52" y="238" class="value" fill="#E5E7EB">#0B1220</text>
+
+    <rect x="166" y="126" width="86" height="74" rx="18" fill="#111827" stroke="#374151"/>
+    <text x="166" y="218" class="label" fill="#94A3B8">SURFACE</text>
+    <text x="166" y="238" class="value" fill="#E5E7EB">#111827</text>
+
+    <rect x="280" y="126" width="86" height="74" rx="18" fill="#E5E7EB"/>
+    <text x="280" y="218" class="label" fill="#94A3B8">TEXT</text>
+    <text x="280" y="238" class="value" fill="#E5E7EB">#E5E7EB</text>
+
+    <rect x="394" y="126" width="86" height="74" rx="18" fill="#38BDF8"/>
+    <text x="394" y="218" class="label" fill="#94A3B8">PRIMARY</text>
+    <text x="394" y="238" class="value" fill="#E5E7EB">#38BDF8</text>
+
+    <rect x="508" y="126" width="86" height="74" rx="18" fill="#10B981"/>
+    <text x="508" y="218" class="label" fill="#94A3B8">ACCENT</text>
+    <text x="508" y="238" class="value" fill="#E5E7EB">#10B981</text>
+
+    <rect x="52" y="282" width="596" height="106" rx="20" fill="#111827" stroke="#334155"/>
+    <text x="78" y="316" class="ui-title" fill="#E5E7EB">Sample UI Card</text>
+    <text x="78" y="338" class="ui-copy" fill="#94A3B8">Dark mode stays readable by using charcoal instead of pure black.</text>
+    <rect x="78" y="353" width="108" height="24" rx="12" fill="#082F49"/>
+    <text x="104" y="369" class="ui-copy" fill="#7DD3FC">Focused</text>
+    <rect x="500" y="345" width="124" height="34" rx="17" fill="#38BDF8"/>
+    <text x="538" y="367" class="button" fill="#082F49">Apply</text>
+  </g>
+</svg>
