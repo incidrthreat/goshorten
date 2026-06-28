@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -13,10 +14,15 @@ import (
 type contextKey string
 
 const (
-	UserContextKey    contextKey = "auth_user"
-	RoleContextKey    contextKey = "auth_role"
-	SessionIDKey      contextKey = "auth_session_id"
+	UserContextKey      contextKey = "auth_user"
+	RoleContextKey      contextKey = "auth_role"
+	SessionIDKey        contextKey = "auth_session_id"
+	WorkspaceContextKey contextKey = "auth_workspace"
 )
+
+// WorkspaceHeader carries the active workspace id from the client (forwarded by
+// the REST gateway into gRPC metadata).
+const WorkspaceHeader = "x-workspace-id"
 
 // AuthInterceptor validates authentication on gRPC calls.
 type AuthInterceptor struct {
@@ -103,6 +109,14 @@ func (i *AuthInterceptor) authorize(ctx context.Context, method string) (context
 		ctx = context.WithValue(ctx, UserContextKey, claims.UserID)
 		ctx = context.WithValue(ctx, RoleContextKey, claims.Role)
 		ctx = context.WithValue(ctx, SessionIDKey, claims.RegisteredClaims.ID)
+
+		// Resolve the active workspace: header override → session → user default.
+		wsID, err := i.AuthStore.ResolveActiveWorkspace(ctx, claims.UserID,
+			claims.RegisteredClaims.ID, workspaceFromMetadata(md))
+		if err != nil {
+			return ctx, status.Error(codes.Internal, "failed to resolve workspace")
+		}
+		ctx = context.WithValue(ctx, WorkspaceContextKey, wsID)
 		return ctx, nil
 	}
 
@@ -126,10 +140,26 @@ func (i *AuthInterceptor) authorize(ctx context.Context, method string) (context
 
 		ctx = context.WithValue(ctx, UserContextKey, user.ID)
 		ctx = context.WithValue(ctx, RoleContextKey, user.Role)
+		// API keys are bound to a single workspace; the header cannot override it.
+		ctx = context.WithValue(ctx, WorkspaceContextKey, key.WorkspaceID)
 		return ctx, nil
 	}
 
 	return ctx, status.Error(codes.Unauthenticated, "invalid authorization format")
+}
+
+// workspaceFromMetadata extracts the X-Workspace-Id override from gRPC metadata.
+// Returns 0 when absent or unparseable.
+func workspaceFromMetadata(md metadata.MD) int64 {
+	vals := md.Get(WorkspaceHeader)
+	if len(vals) == 0 {
+		return 0
+	}
+	id, err := strconv.ParseInt(strings.TrimSpace(vals[0]), 10, 64)
+	if err != nil || id < 0 {
+		return 0
+	}
+	return id
 }
 
 // UserIDFromContext extracts the authenticated user ID from context.
@@ -148,6 +178,13 @@ func RoleFromContext(ctx context.Context) string {
 func SessionIDFromContext(ctx context.Context) string {
 	id, _ := ctx.Value(SessionIDKey).(string)
 	return id
+}
+
+// WorkspaceIDFromContext extracts the resolved active workspace id from context.
+// Returns (0, false) when no workspace was resolved.
+func WorkspaceIDFromContext(ctx context.Context) (int64, bool) {
+	id, ok := ctx.Value(WorkspaceContextKey).(int64)
+	return id, ok && id > 0
 }
 
 func hasScope(keyScopes, required string) bool {

@@ -33,6 +33,32 @@ type CreateServer struct {
 
 var log = hclog.Default()
 
+// requireWorkspace returns the active workspace id resolved by the auth interceptor.
+func requireWorkspace(ctx context.Context) (int64, error) {
+	ws, ok := auth.WorkspaceIDFromContext(ctx)
+	if !ok {
+		return 0, status.Error(codes.FailedPrecondition, "no active workspace selected")
+	}
+	return ws, nil
+}
+
+// getScopedURL fetches a URL by code and enforces that it belongs to the caller's
+// active workspace, returning NotFound otherwise so existence isn't leaked across tenants.
+func (c *CreateServer) getScopedURL(ctx context.Context, code string) (*data.URLRecord, error) {
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rec, err := c.Store.Get(code)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "code not found")
+	}
+	if rec.WorkspaceID != ws {
+		return nil, status.Error(codes.NotFound, "code not found")
+	}
+	return rec, nil
+}
+
 // CreateURL creates a new short URL.
 func (c *CreateServer) CreateURL(ctx context.Context, req *pb.CreateURLRequest) (*pb.ShortURL, error) {
 	longURL, err := NormalizeURL(req.GetLongUrl())
@@ -60,6 +86,12 @@ func (c *CreateServer) CreateURL(ctx context.Context, req *pb.CreateURLRequest) 
 	if userID, ok := auth.UserIDFromContext(ctx); ok {
 		params.UserID = &userID
 	}
+
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
+	}
+	params.WorkspaceID = ws
 
 	if req.GetMaxVisits() > 0 {
 		mv := req.GetMaxVisits()
@@ -119,9 +151,9 @@ func (c *CreateServer) GetStats(ctx context.Context, req *pb.GetStatsRequest) (*
 		return nil, errNoCode
 	}
 
-	rec, err := c.Store.Get(code)
+	rec, err := c.getScopedURL(ctx, code)
 	if err != nil {
-		return nil, errors.New("code expired or not in storage")
+		return nil, err
 	}
 
 	resp := &pb.StatsResponse{
@@ -151,12 +183,13 @@ func (c *CreateServer) UpdateURL(ctx context.Context, req *pb.UpdateURLRequest) 
 		return nil, errNoCode
 	}
 
+	// Enforce workspace scope (NotFound if the code isn't in the active workspace).
+	rec, err := c.getScopedURL(ctx, code)
+	if err != nil {
+		return nil, err
+	}
 	// Ownership check: non-admins may only update URLs they created.
 	if role := auth.RoleFromContext(ctx); role != "admin" {
-		rec, err := c.Store.Get(code)
-		if err != nil {
-			return nil, status.Error(codes.NotFound, "URL not found")
-		}
 		userID, ok := auth.UserIDFromContext(ctx)
 		if !ok || rec.CreatedByUserID == nil || *rec.CreatedByUserID != userID {
 			return nil, status.Error(codes.PermissionDenied, "you do not own this URL")
@@ -164,7 +197,8 @@ func (c *CreateServer) UpdateURL(ctx context.Context, req *pb.UpdateURLRequest) 
 	}
 
 	params := data.URLUpdateParams{
-		Code: code,
+		Code:        code,
+		WorkspaceID: rec.WorkspaceID,
 	}
 
 	if req.GetLongUrl() != "" {
@@ -202,13 +236,13 @@ func (c *CreateServer) UpdateURL(ctx context.Context, req *pb.UpdateURLRequest) 
 		params.Tags = req.GetTags()
 	}
 
-	rec, err := c.Store.Update(params)
+	updated, err := c.Store.Update(params)
 	if err != nil {
 		log.Error("UpdateURL", "Error", err)
 		return nil, err
 	}
 
-	return urlRecordToProto(rec), nil
+	return urlRecordToProto(updated), nil
 }
 
 // DeleteURL soft-deletes a short URL.
@@ -218,19 +252,20 @@ func (c *CreateServer) DeleteURL(ctx context.Context, req *pb.DeleteURLRequest) 
 		return nil, errNoCode
 	}
 
+	// Enforce workspace scope (NotFound if the code isn't in the active workspace).
+	rec, err := c.getScopedURL(ctx, code)
+	if err != nil {
+		return nil, err
+	}
 	// Ownership check: non-admins may only delete URLs they created.
 	if role := auth.RoleFromContext(ctx); role != "admin" {
-		rec, err := c.Store.Get(code)
-		if err != nil {
-			return nil, status.Error(codes.NotFound, "URL not found")
-		}
 		userID, ok := auth.UserIDFromContext(ctx)
 		if !ok || rec.CreatedByUserID == nil || *rec.CreatedByUserID != userID {
 			return nil, status.Error(codes.PermissionDenied, "you do not own this URL")
 		}
 	}
 
-	if err := c.Store.Delete(code); err != nil {
+	if err := c.Store.Delete(rec.WorkspaceID, code); err != nil {
 		log.Error("DeleteURL", "Error", err)
 		return &pb.DeleteURLResponse{Success: false}, err
 	}
@@ -240,17 +275,23 @@ func (c *CreateServer) DeleteURL(ctx context.Context, req *pb.DeleteURLRequest) 
 
 // ListURLs returns a paginated list of short URLs.
 func (c *CreateServer) ListURLs(ctx context.Context, req *pb.ListURLsRequest) (*pb.ListURLsResponse, error) {
-	params := data.URLListParams{
-		Page:     req.GetPage(),
-		PageSize: req.GetPageSize(),
-		Search:   req.GetSearch(),
-		Tag:      req.GetTag(),
-		Domain:   req.GetDomain(),
-		OrderBy:  req.GetOrderBy(),
-		OrderDir: req.GetOrderDir(),
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	// Non-admins see only their own URLs.
+	params := data.URLListParams{
+		Page:        req.GetPage(),
+		PageSize:    req.GetPageSize(),
+		Search:      req.GetSearch(),
+		Tag:         req.GetTag(),
+		Domain:      req.GetDomain(),
+		OrderBy:     req.GetOrderBy(),
+		OrderDir:    req.GetOrderDir(),
+		WorkspaceID: ws,
+	}
+
+	// Within a workspace, non-admins see only the URLs they created.
 	if role := auth.RoleFromContext(ctx); role != "admin" {
 		if userID, ok := auth.UserIDFromContext(ctx); ok {
 			params.UserID = &userID
@@ -284,10 +325,9 @@ func (c *CreateServer) GetQRCode(ctx context.Context, req *pb.GetQRCodeRequest) 
 		return nil, errNoCode
 	}
 
-	// Verify the code exists
-	_, err := c.Store.Get(code)
-	if err != nil {
-		return nil, errors.New("code not found")
+	// Verify the code exists within the active workspace.
+	if _, err := c.getScopedURL(ctx, code); err != nil {
+		return nil, err
 	}
 
 	size := int(req.GetSize())

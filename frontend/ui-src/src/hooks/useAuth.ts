@@ -56,6 +56,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('workspaceId')
     setUser(null)
     setIsOIDC(false)
     setThemeState('system')

@@ -68,6 +68,8 @@ func (h *AdminHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/v1/auth/sign-in-history", h.handleSignInHistory)
 	mux.HandleFunc("/api/v1/auth/config", h.handleAuthConfig)
 	mux.HandleFunc("/api/v1/admin/settings", h.handleAdminSettings)
+	mux.HandleFunc("/api/v1/workspaces", h.handleWorkspaces)
+	mux.HandleFunc("/api/v1/workspaces/", h.handleWorkspaceAction)
 }
 
 // GET /api/v1/admin/users?search=&page=&page_size=
@@ -387,8 +389,15 @@ func (h *AdminHandler) handleAdminURL(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "assignedUserId is required"})
 			return
 		}
-		_, err := h.URLStore.Update(data.URLUpdateParams{
+		// Operator action: resolve the URL's current workspace to scope the update.
+		rec, err := h.URLStore.Get(code)
+		if err != nil {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "url not found"})
+			return
+		}
+		_, err = h.URLStore.Update(data.URLUpdateParams{
 			Code:           code,
+			WorkspaceID:    rec.WorkspaceID,
 			AssignedUserID: body.AssignedUserID,
 		})
 		if err != nil {

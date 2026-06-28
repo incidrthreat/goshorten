@@ -241,7 +241,12 @@ func (s *AuthServer) CreateAPIKey(ctx context.Context, req *pb.CreateAPIKeyReque
 		return nil, status.Error(codes.Unauthenticated, "not authenticated")
 	}
 
-	plaintext, key, err := s.AuthStore.CreateAPIKey(ctx, userID, req.GetLabel(), req.GetScopes())
+	workspaceID, ok := auth.WorkspaceIDFromContext(ctx)
+	if !ok {
+		return nil, status.Error(codes.FailedPrecondition, "no active workspace selected")
+	}
+
+	plaintext, key, err := s.AuthStore.CreateAPIKey(ctx, userID, workspaceID, req.GetLabel(), req.GetScopes())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to create API key")
 	}

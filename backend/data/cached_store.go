@@ -115,9 +115,9 @@ func (c *CachedStore) Update(params URLUpdateParams) (*URLRecord, error) {
 	return rec, nil
 }
 
-// Delete soft-deletes in Postgres and removes from cache.
-func (c *CachedStore) Delete(code string) error {
-	if err := c.Primary.Delete(code); err != nil {
+// Delete removes a URL within the workspace and evicts it from cache.
+func (c *CachedStore) Delete(workspaceID int64, code string) error {
+	if err := c.Primary.Delete(workspaceID, code); err != nil {
 		return err
 	}
 	c.invalidate(code)
@@ -137,6 +137,11 @@ func (c *CachedStore) SetVisitLogger(vl *VisitLogger) {
 // RecordVisit delegates to the primary store.
 func (c *CachedStore) RecordVisit(code string, ipAddress, userAgent, referer string) {
 	c.Primary.RecordVisit(code, ipAddress, userAgent, referer)
+}
+
+// SetDefaultWorkspace delegates to the primary store.
+func (c *CachedStore) SetDefaultWorkspace(id int64) {
+	c.Primary.SetDefaultWorkspace(id)
 }
 
 func (c *CachedStore) invalidate(code string) {

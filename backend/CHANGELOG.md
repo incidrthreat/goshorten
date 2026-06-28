@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 - Versioning policy update: phase changes are tracked as **minor** releases in `0.x.0` format (for example, `0.5.0`), not major version bumps.
 
+### Phase 14: Multi-Tenancy Foundation (Workspaces & Tenant Isolation)
+#### Added
+- `workspaces` table (id, name, slug, owner_id, plan, created_at) as the billable tenant unit, plus `workspace_id` foreign keys on `urls`, `clicks`, `tags`, `api_keys`, and `domains` (migration 000007). Existing rows are backfilled into a single "Default" workspace owned by the earliest admin.
+- Auto-provisioning of a personal workspace on user creation (`AuthStore.CreateUser`), so no account is ever workspace-less. Users may also create additional workspaces they own.
+- Active-workspace resolution in the gRPC auth interceptor: `X-Workspace-Id` header override → session's last-switched workspace → user default. API keys are bound to a single workspace.
+- Workspace self-service REST endpoints (`/api/v1/workspaces`, `/workspaces/switch`, `/workspaces/{id}`) and a dashboard workspace switcher that persists the active workspace per session.
+- Row-Level Security backstop on `urls` (migration 000008) keyed on `app.current_workspace_id`, enforced via per-request transaction helpers in the repository layer.
+- Cross-tenant isolation integration tests (`backend/integration`, gated on `GOSHORTEN_TEST_DSN`).
+#### Changed
+- Every workspace-scoped repository query (`Create`/`Get`/`Update`/`Delete`/`List`, tags, analytics access) now enforces `workspace_id`; tag names are unique per workspace rather than globally.
+- Platform/operator admin (global `role=admin`) is distinct from workspace ownership: operator URL search runs unscoped while normal URL/tag/analytics operations are confined to the active workspace.
+
 ## [0.0.5] - 2020-08-19
 ### Added 
 - gRPC server GetStats message to retrieve Statistics from Redis 

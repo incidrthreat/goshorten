@@ -2,7 +2,6 @@ package shortener
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	pb "github.com/incidrthreat/goshorten/backend/pb"
@@ -20,9 +19,9 @@ func (c *CreateServer) GetVisitSummary(ctx context.Context, req *pb.GetVisitSumm
 		return nil, errNoCode
 	}
 
-	rec, err := c.Store.Get(code)
+	rec, err := c.getScopedURL(ctx, code)
 	if err != nil {
-		return nil, errors.New("code not found")
+		return nil, err
 	}
 
 	var since *time.Time
@@ -52,9 +51,9 @@ func (c *CreateServer) GetVisitsByDate(ctx context.Context, req *pb.GetVisitsByD
 		return nil, errNoCode
 	}
 
-	rec, err := c.Store.Get(code)
+	rec, err := c.getScopedURL(ctx, code)
 	if err != nil {
-		return nil, errors.New("code not found")
+		return nil, err
 	}
 
 	since := time.Now().AddDate(0, 0, -30) // default: last 30 days
@@ -88,9 +87,9 @@ func (c *CreateServer) GetVisitsByField(ctx context.Context, req *pb.GetVisitsBy
 		return nil, errNoCode
 	}
 
-	rec, err := c.Store.Get(code)
+	rec, err := c.getScopedURL(ctx, code)
 	if err != nil {
-		return nil, errors.New("code not found")
+		return nil, err
 	}
 
 	var since *time.Time
@@ -121,9 +120,9 @@ func (c *CreateServer) GetRecentVisits(ctx context.Context, req *pb.GetRecentVis
 		return nil, errNoCode
 	}
 
-	rec, err := c.Store.Get(code)
+	rec, err := c.getScopedURL(ctx, code)
 	if err != nil {
-		return nil, errors.New("code not found")
+		return nil, err
 	}
 
 	visits, err := c.Analytics.GetRecentVisits(rec.ID, int(req.GetLimit()), req.GetExcludeBots())

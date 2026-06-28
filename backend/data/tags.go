@@ -28,14 +28,15 @@ type TagStore struct {
 	Pool *pgxpool.Pool
 }
 
-// ListTags returns all tags with their URL counts.
-func (ts *TagStore) ListTags() ([]Tag, error) {
+// ListTags returns all tags in a workspace with their URL counts.
+func (ts *TagStore) ListTags(workspaceID int64) ([]Tag, error) {
 	rows, err := ts.Pool.Query(context.Background(),
 		`SELECT t.id, t.name, COUNT(ut.url_id) AS url_count
 		 FROM tags t
 		 LEFT JOIN url_tags ut ON ut.tag_id = t.id
+		 WHERE t.workspace_id = $1
 		 GROUP BY t.id
-		 ORDER BY t.name`)
+		 ORDER BY t.name`, workspaceID)
 	if err != nil {
 		return nil, fmt.Errorf("list tags: %w", err)
 	}
@@ -52,17 +53,17 @@ func (ts *TagStore) ListTags() ([]Tag, error) {
 	return tags, nil
 }
 
-// CreateTag creates a new tag. Returns the tag if it already exists.
-func (ts *TagStore) CreateTag(name string) (*Tag, error) {
+// CreateTag creates a new tag in a workspace. Returns the tag if it already exists.
+func (ts *TagStore) CreateTag(workspaceID int64, name string) (*Tag, error) {
 	if name == "" {
 		return nil, errors.New("tag name cannot be empty")
 	}
 
 	var t Tag
 	err := ts.Pool.QueryRow(context.Background(),
-		`INSERT INTO tags (name) VALUES ($1)
-		 ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-		 RETURNING id, name`, name).Scan(&t.ID, &t.Name)
+		`INSERT INTO tags (name, workspace_id) VALUES ($1, $2)
+		 ON CONFLICT (workspace_id, name) DO UPDATE SET name = EXCLUDED.name
+		 RETURNING id, name`, name, workspaceID).Scan(&t.ID, &t.Name)
 	if err != nil {
 		return nil, fmt.Errorf("create tag: %w", err)
 	}
@@ -74,16 +75,16 @@ func (ts *TagStore) CreateTag(name string) (*Tag, error) {
 	return &t, nil
 }
 
-// RenameTag renames an existing tag.
-func (ts *TagStore) RenameTag(oldName, newName string) (*Tag, error) {
+// RenameTag renames an existing tag within a workspace.
+func (ts *TagStore) RenameTag(workspaceID int64, oldName, newName string) (*Tag, error) {
 	if oldName == "" || newName == "" {
 		return nil, errors.New("tag names cannot be empty")
 	}
 
 	var t Tag
 	err := ts.Pool.QueryRow(context.Background(),
-		`UPDATE tags SET name = $1 WHERE name = $2 RETURNING id, name`,
-		newName, oldName).Scan(&t.ID, &t.Name)
+		`UPDATE tags SET name = $1 WHERE name = $2 AND workspace_id = $3 RETURNING id, name`,
+		newName, oldName, workspaceID).Scan(&t.ID, &t.Name)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("tag not found")
@@ -100,10 +101,10 @@ func (ts *TagStore) RenameTag(oldName, newName string) (*Tag, error) {
 	return &t, nil
 }
 
-// DeleteTag removes a tag and all its URL associations.
-func (ts *TagStore) DeleteTag(name string) error {
+// DeleteTag removes a tag and all its URL associations within a workspace.
+func (ts *TagStore) DeleteTag(workspaceID int64, name string) error {
 	result, err := ts.Pool.Exec(context.Background(),
-		`DELETE FROM tags WHERE name = $1`, name)
+		`DELETE FROM tags WHERE name = $1 AND workspace_id = $2`, name, workspaceID)
 	if err != nil {
 		return fmt.Errorf("delete tag: %w", err)
 	}
@@ -113,12 +114,12 @@ func (ts *TagStore) DeleteTag(name string) error {
 	return nil
 }
 
-// GetTagStats returns aggregated visit stats for all URLs under a tag.
-func (ts *TagStore) GetTagStats(name string) (*TagStats, error) {
+// GetTagStats returns aggregated visit stats for all URLs under a tag in a workspace.
+func (ts *TagStore) GetTagStats(workspaceID int64, name string) (*TagStats, error) {
 	var tagID int64
 	var tagName string
 	err := ts.Pool.QueryRow(context.Background(),
-		`SELECT id, name FROM tags WHERE name = $1`, name).Scan(&tagID, &tagName)
+		`SELECT id, name FROM tags WHERE name = $1 AND workspace_id = $2`, name, workspaceID).Scan(&tagID, &tagName)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("tag not found")

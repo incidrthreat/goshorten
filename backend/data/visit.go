@@ -12,9 +12,10 @@ import (
 
 // Visit represents a single click event with full metadata.
 type Visit struct {
-	URLID      int64
-	Code       string // used for orphan visits (URLID=0)
-	ClickedAt  time.Time
+	URLID       int64
+	WorkspaceID int64  // owning tenant (denormalized from urls for scoped analytics)
+	Code        string // used for orphan visits (URLID=0)
+	ClickedAt   time.Time
 	IPAddress  string
 	UserAgent  string
 	Referer    string
@@ -139,10 +140,14 @@ func (vl *VisitLogger) worker(id int) {
 }
 
 func (vl *VisitLogger) insertClick(v Visit) {
+	var workspaceID *int64
+	if v.WorkspaceID > 0 {
+		workspaceID = &v.WorkspaceID
+	}
 	_, err := vl.pool.Exec(context.Background(),
-		`INSERT INTO clicks (url_id, clicked_at, ip_address, user_agent, referer, country, city, device_type, browser, os, is_bot)
-		 VALUES ($1, $2, $3::inet, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		v.URLID, v.ClickedAt, nullIfEmptyInet(v.IPAddress), nullIfEmpty(v.UserAgent),
+		`INSERT INTO clicks (url_id, workspace_id, clicked_at, ip_address, user_agent, referer, country, city, device_type, browser, os, is_bot)
+		 VALUES ($1, $2, $3, $4::inet, $5, $6, $7, $8, $9, $10, $11, $12)`,
+		v.URLID, workspaceID, v.ClickedAt, nullIfEmptyInet(v.IPAddress), nullIfEmpty(v.UserAgent),
 		nullIfEmpty(v.Referer), nullIfEmpty(v.Country), nullIfEmpty(v.City),
 		nullIfEmpty(v.DeviceType), nullIfEmpty(v.Browser), nullIfEmpty(v.OS), v.IsBot)
 	if err != nil {

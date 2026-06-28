@@ -7,9 +7,13 @@ import (
 	pb "github.com/incidrthreat/goshorten/backend/pb"
 )
 
-// ListTags returns all tags with URL counts.
+// ListTags returns all tags with URL counts in the active workspace.
 func (c *CreateServer) ListTags(ctx context.Context, req *pb.ListTagsRequest) (*pb.ListTagsResponse, error) {
-	tags, err := c.Tags.ListTags()
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tags, err := c.Tags.ListTags(ws)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +36,11 @@ func (c *CreateServer) CreateTag(ctx context.Context, req *pb.CreateTagRequest) 
 		return nil, errors.New("tag name is required")
 	}
 
-	t, err := c.Tags.CreateTag(name)
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
+	}
+	t, err := c.Tags.CreateTag(ws, name)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +58,11 @@ func (c *CreateServer) RenameTag(ctx context.Context, req *pb.RenameTagRequest) 
 		return nil, errors.New("both old_name and new_name are required")
 	}
 
-	t, err := c.Tags.RenameTag(req.GetOldName(), req.GetNewName())
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
+	}
+	t, err := c.Tags.RenameTag(ws, req.GetOldName(), req.GetNewName())
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +80,11 @@ func (c *CreateServer) DeleteTag(ctx context.Context, req *pb.DeleteTagRequest) 
 		return nil, errors.New("tag name is required")
 	}
 
-	if err := c.Tags.DeleteTag(req.GetName()); err != nil {
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := c.Tags.DeleteTag(ws, req.GetName()); err != nil {
 		return &pb.DeleteTagResponse{Success: false}, err
 	}
 
@@ -81,7 +97,11 @@ func (c *CreateServer) GetTagStats(ctx context.Context, req *pb.GetTagStatsReque
 		return nil, errors.New("tag name is required")
 	}
 
-	stats, err := c.Tags.GetTagStats(req.GetName())
+	ws, err := requireWorkspace(ctx)
+	if err != nil {
+		return nil, err
+	}
+	stats, err := c.Tags.GetTagStats(ws, req.GetName())
 	if err != nil {
 		return nil, err
 	}
