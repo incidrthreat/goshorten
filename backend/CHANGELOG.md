@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 - Versioning policy update: phase changes are tracked as **minor** releases in `0.x.0` format (for example, `0.5.0`), not major version bumps.
 
+### Phase 15: Memberships, Roles & Invitations
+#### Added
+- `memberships` table (user_id, workspace_id, role, status) and `invitations` table (workspace_id, email, role, token, invited_by, expires_at, status) with migration 000009. Existing workspace owners and legacy shared-workspace users are backfilled into memberships.
+- Per-workspace roles — Owner, Admin, Member, Viewer — resolved by `AuthStore.WorkspaceRole`. The gRPC interceptor enforces viewer read-only access and exposes the role via context (`WorkspaceRoleFromContext`).
+- "At least one Owner" invariant: the last owner cannot be demoted or removed (`ErrLastOwner`), plus an ownership-transfer flow (`TransferOwnership`).
+- Invitation lifecycle: create → email accept link → membership on accept, with resend, revoke, and an hourly expiry-sweep worker. Accept handles both existing accounts (sign in) and new invitees (self-service signup for the invited email).
+- Member/invitation REST endpoints under `/api/v1/workspaces/{id}/members`, `/transfer-ownership`, `/invitations`, and token-addressed `/api/v1/invitations/{token}` (public preview + accept).
+- `mail` package: SMTP sender (STARTTLS / implicit TLS) with a log-only fallback so invitations work without an SMTP server; create/resend responses also return a copyable accept link. Configurable via `GOSHORTEN_SMTP_*`, `GOSHORTEN_SMTP_FROM`, and `GOSHORTEN_APP_BASE_URL`.
+- Membership isolation, last-owner, ownership-transfer, and invite-accept integration tests (`backend/integration`).
+#### Changed
+- `AuthStore.CreateUser` now also creates an owner membership for the auto-provisioned personal workspace; `ListWorkspacesForUser`/`UserCanAccessWorkspace` resolve access via memberships (with owner/default-workspace bridges for legacy accounts).
+- Global `users.role` remains the platform/operator flag; day-to-day authorization within a workspace is governed by the membership role.
+
 ### Phase 14: Multi-Tenancy Foundation (Workspaces & Tenant Isolation)
 #### Added
 - `workspaces` table (id, name, slug, owner_id, plan, created_at) as the billable tenant unit, plus `workspace_id` foreign keys on `urls`, `clicks`, `tags`, `api_keys`, and `domains` (migration 000007). Existing rows are backfilled into a single "Default" workspace owned by the earliest admin.

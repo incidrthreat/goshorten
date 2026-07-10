@@ -8,18 +8,36 @@ import (
 
 	"github.com/incidrthreat/goshorten/backend/auth"
 	"github.com/incidrthreat/goshorten/backend/data"
+	"github.com/incidrthreat/goshorten/backend/mail"
 )
 
 // AdminHandler provides admin-only and self-service REST endpoints that live
 // outside the gRPC-gateway (no proto changes needed).
 type AdminHandler struct {
-	AuthStore            *auth.AuthStore
-	JWTMgr               *auth.JWTManager
-	URLStore             data.URLStore
-	OIDCMgr              *auth.OIDCManager
+	AuthStore *auth.AuthStore
+	JWTMgr    *auth.JWTManager
+	URLStore  data.URLStore
+	OIDCMgr   *auth.OIDCManager
+	// Mailer delivers invitation emails (Phase 15). May be nil / log-only.
+	Mailer *mail.Mailer
+	// AppBaseURL is the public origin used to build invite accept links.
+	AppBaseURL string
 	// DisablePasswordLogin is true when the GOSHORTEN_DISABLE_PASSWORD_LOGIN env var
 	// (or config.json flag) forces password login off. Admin cannot override it.
 	DisablePasswordLogin bool
+}
+
+// passwordLoginEnabled reports the effective password-login setting (env override
+// wins over the DB flag), matching handleAuthConfig.
+func (h *AdminHandler) passwordLoginEnabled(r *http.Request) bool {
+	if h.DisablePasswordLogin {
+		return false
+	}
+	val, err := h.AuthStore.GetSetting(r.Context(), "password_login_enabled")
+	if err == nil && val == "false" {
+		return false
+	}
+	return true
 }
 
 // requireAuth verifies the Bearer token and returns the user claims.
@@ -70,6 +88,18 @@ func (h *AdminHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/v1/admin/settings", h.handleAdminSettings)
 	mux.HandleFunc("/api/v1/workspaces", h.handleWorkspaces)
 	mux.HandleFunc("/api/v1/workspaces/", h.handleWorkspaceAction)
+
+	// Phase 15: memberships, roles & invitations. These use Go 1.22 path-value
+	// patterns so they take precedence over the "/api/v1/workspaces/" subtree.
+	mux.HandleFunc("/api/v1/workspaces/{id}/members", h.handleMembers)
+	mux.HandleFunc("/api/v1/workspaces/{id}/members/{userId}", h.handleMemberByID)
+	mux.HandleFunc("/api/v1/workspaces/{id}/transfer-ownership", h.handleTransferOwnership)
+	mux.HandleFunc("/api/v1/workspaces/{id}/invitations", h.handleInvitations)
+	mux.HandleFunc("/api/v1/workspaces/{id}/invitations/{invId}", h.handleInvitationByID)
+	mux.HandleFunc("/api/v1/workspaces/{id}/invitations/{invId}/resend", h.handleInvitationResend)
+	// Invite acceptance (token-addressed; preview is public, accept may sign up).
+	mux.HandleFunc("/api/v1/invitations/{token}", h.handleInvitePreview)
+	mux.HandleFunc("/api/v1/invitations/{token}/accept", h.handleInviteAccept)
 }
 
 // GET /api/v1/admin/users?search=&page=&page_size=

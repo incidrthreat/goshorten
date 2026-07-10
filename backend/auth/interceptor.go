@@ -14,10 +14,11 @@ import (
 type contextKey string
 
 const (
-	UserContextKey      contextKey = "auth_user"
-	RoleContextKey      contextKey = "auth_role"
-	SessionIDKey        contextKey = "auth_session_id"
-	WorkspaceContextKey contextKey = "auth_workspace"
+	UserContextKey          contextKey = "auth_user"
+	RoleContextKey          contextKey = "auth_role"
+	SessionIDKey            contextKey = "auth_session_id"
+	WorkspaceContextKey     contextKey = "auth_workspace"
+	WorkspaceRoleContextKey contextKey = "auth_workspace_role"
 )
 
 // WorkspaceHeader carries the active workspace id from the client (forwarded by
@@ -40,17 +41,17 @@ func NewAuthInterceptor(jwtMgr *JWTManager, store *AuthStore) *AuthInterceptor {
 		JWTMgr:    jwtMgr,
 		AuthStore: store,
 		PublicMethods: map[string]bool{
-			"/Shortener/GetURL":      true, // Redirects must be unauthenticated
-			"/Shortener/PreviewURL":  true, // Public link preview (code+)
+			"/Shortener/GetURL":       true, // Redirects must be unauthenticated
+			"/Shortener/PreviewURL":   true, // Public link preview (code+)
 			"/Auth/Login":             true,
 			"/Auth/OIDCAuthURL":       true, // Must be public — called before login to get redirect URL
 			"/Auth/OIDCCallback":      true,
 			"/Auth/ListOIDCProviders": true,
 		},
 		AdminMethods: map[string]bool{
-			"/Auth/CreateOIDCProvider":    true,
-			"/Auth/DeleteOIDCProvider":    true,
-			"/Shortener/GetOrphanVisits":  true,
+			"/Auth/CreateOIDCProvider":   true,
+			"/Auth/DeleteOIDCProvider":   true,
+			"/Shortener/GetOrphanVisits": true,
 		},
 	}
 }
@@ -117,6 +118,17 @@ func (i *AuthInterceptor) authorize(ctx context.Context, method string) (context
 			return ctx, status.Error(codes.Internal, "failed to resolve workspace")
 		}
 		ctx = context.WithValue(ctx, WorkspaceContextKey, wsID)
+
+		// Resolve the caller's per-workspace role (Phase 15.2) and enforce
+		// viewer read-only for tenant operations (Phase 15.3).
+		wsRole, err := i.AuthStore.WorkspaceRole(ctx, claims.UserID, wsID)
+		if err != nil {
+			return ctx, status.Error(codes.Internal, "failed to resolve workspace role")
+		}
+		ctx = context.WithValue(ctx, WorkspaceRoleContextKey, wsRole)
+		if wsRole == RoleViewer && isWriteMethod(method) {
+			return ctx, status.Error(codes.PermissionDenied, "viewers have read-only access to this workspace")
+		}
 		return ctx, nil
 	}
 
@@ -142,6 +154,16 @@ func (i *AuthInterceptor) authorize(ctx context.Context, method string) (context
 		ctx = context.WithValue(ctx, RoleContextKey, user.Role)
 		// API keys are bound to a single workspace; the header cannot override it.
 		ctx = context.WithValue(ctx, WorkspaceContextKey, key.WorkspaceID)
+
+		// Enforce the key owner's per-workspace role (viewer keys are read-only).
+		wsRole, err := i.AuthStore.WorkspaceRole(ctx, user.ID, key.WorkspaceID)
+		if err != nil {
+			return ctx, status.Error(codes.Internal, "failed to resolve workspace role")
+		}
+		ctx = context.WithValue(ctx, WorkspaceRoleContextKey, wsRole)
+		if wsRole == RoleViewer && isWriteMethod(method) {
+			return ctx, status.Error(codes.PermissionDenied, "viewers have read-only access to this workspace")
+		}
 		return ctx, nil
 	}
 
@@ -185,6 +207,24 @@ func SessionIDFromContext(ctx context.Context) string {
 func WorkspaceIDFromContext(ctx context.Context) (int64, bool) {
 	id, ok := ctx.Value(WorkspaceContextKey).(int64)
 	return id, ok && id > 0
+}
+
+// WorkspaceRoleFromContext extracts the caller's role within the active workspace.
+// Returns "" when no role was resolved.
+func WorkspaceRoleFromContext(ctx context.Context) string {
+	role, _ := ctx.Value(WorkspaceRoleContextKey).(string)
+	return role
+}
+
+// isWriteMethod reports whether a gRPC method mutates tenant data. Used to gate
+// viewer (read-only) memberships.
+func isWriteMethod(method string) bool {
+	for _, verb := range []string{"Create", "Update", "Delete", "Rename", "Revoke", "Roll", "Assign"} {
+		if strings.Contains(method, verb) {
+			return true
+		}
+	}
+	return false
 }
 
 func hasScope(keyScopes, required string) bool {

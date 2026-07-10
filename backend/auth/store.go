@@ -43,12 +43,12 @@ type Session struct {
 
 // SignInEvent represents a sign-in history record.
 type SignInEvent struct {
-	ID          int64
-	UserID      *int64
-	IPAddress   string
-	UserAgent   string
-	Success     bool
-	SignedInAt  time.Time
+	ID         int64
+	UserID     *int64
+	IPAddress  string
+	UserAgent  string
+	Success    bool
+	SignedInAt time.Time
 }
 
 // UpdateOIDCProviderParams holds fields that can be updated on an OIDC provider.
@@ -163,6 +163,14 @@ func (s *AuthStore) CreateUser(ctx context.Context, email, name, role string, pa
 		`INSERT INTO workspaces (name, slug, owner_id, plan) VALUES ($1, $2, $3, 'free') RETURNING id`,
 		wsName, wsSlug, u.ID).Scan(&wsID); err != nil {
 		return nil, fmt.Errorf("create personal workspace: %w", err)
+	}
+
+	// The user owns their personal workspace (Phase 15.1). The ON CONFLICT guard
+	// tolerates re-runs / legacy migration backfills.
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO memberships (user_id, workspace_id, role) VALUES ($1, $2, 'owner')
+		 ON CONFLICT (user_id, workspace_id) DO NOTHING`, u.ID, wsID); err != nil {
+		return nil, fmt.Errorf("create owner membership: %w", err)
 	}
 
 	if _, err := tx.Exec(ctx,

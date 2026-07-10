@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 - Versioning policy update: phase changes are tracked as **minor** releases in `0.x.0` format (for example, `0.5.0`), not major version bumps.
 
+### Phase 15: Memberships, Roles & Invitations
+#### Added
+- Members page (`/members`) with a member list, per-member role management (Admin/Member/Viewer), remove/leave, "Make owner" ownership transfer, and a pending-invitations panel with resend, revoke, and copy-accept-link actions.
+- Invite form for owners/admins; when SMTP is not configured the accept link is copied to the clipboard so it can be shared directly.
+- Public invite-acceptance page (`/invite/:token`) that previews the workspace/role, lets signed-in users join, prompts existing accounts to sign in, and offers self-service signup for new invitees.
+- `members` and `invitations` API clients plus a "Members" sidebar entry.
+
 ## [0.0.4] - 2020-08-19
 ### Added
 - gRPC pull and save of code statistics

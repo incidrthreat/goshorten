@@ -41,6 +41,17 @@ type GatewayConf struct {
 	HTTPAddr string `json:"http_addr"`
 }
 
+// MailConf - outbound email configuration (Phase 15 invitations). When Host is
+// empty the app logs invite links instead of sending mail, so invitations still
+// work out of the box (the UI also surfaces a copyable link).
+type MailConf struct {
+	Host     string `json:"host"`     // SMTP host
+	Port     int    `json:"port"`     // SMTP port (587 STARTTLS, 465 implicit TLS)
+	Username string `json:"username"` // SMTP auth username
+	Password string `json:"password"` // SMTP auth password
+	From     string `json:"from"`     // From address
+}
+
 // Configuration - the server config
 type Configuration struct {
 	ListenInterface string       `json:"listen_interface"`
@@ -48,7 +59,11 @@ type Configuration struct {
 	Postgres        PostgresConf `json:"postgres_conf"`
 	Auth            AuthConf     `json:"auth_conf"`
 	Gateway         GatewayConf  `json:"gateway_conf"`
+	Mail            MailConf     `json:"mail_conf"`
 	GRPCHost        string       `json:"grpc_host"`
+	// AppBaseURL is the public origin used to build invite accept links
+	// (e.g. https://links.example.com). Falls back to a relative path when empty.
+	AppBaseURL string `json:"app_base_url"`
 }
 
 // DSN returns a Postgres connection string.
@@ -149,5 +164,25 @@ func applyEnvOverrides(conf *Configuration) {
 	}
 	if v := os.Getenv("GOSHORTEN_GATEWAY_ADDR"); v != "" {
 		conf.Gateway.HTTPAddr = v
+	}
+	if v := os.Getenv("GOSHORTEN_APP_BASE_URL"); v != "" {
+		conf.AppBaseURL = v
+	}
+	if v := os.Getenv("GOSHORTEN_SMTP_HOST"); v != "" {
+		conf.Mail.Host = v
+	}
+	if v := os.Getenv("GOSHORTEN_SMTP_PORT"); v != "" {
+		if port, err := strconv.Atoi(v); err == nil {
+			conf.Mail.Port = port
+		}
+	}
+	if v := os.Getenv("GOSHORTEN_SMTP_USERNAME"); v != "" {
+		conf.Mail.Username = v
+	}
+	if v := os.Getenv("GOSHORTEN_SMTP_PASSWORD"); v != "" {
+		conf.Mail.Password = v
+	}
+	if v := os.Getenv("GOSHORTEN_SMTP_FROM"); v != "" {
+		conf.Mail.From = v
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/incidrthreat/goshorten/backend/auth"
 	"github.com/incidrthreat/goshorten/backend/data"
 	"github.com/incidrthreat/goshorten/backend/gateway"
+	"github.com/incidrthreat/goshorten/backend/mail"
 	pb "github.com/incidrthreat/goshorten/backend/pb"
 
 	"github.com/hashicorp/go-hclog"
@@ -187,10 +188,18 @@ func main() {
 				"redis":    func(ctx context.Context) error { return redisClient.Ping().Err() },
 			},
 			AdminHandler: &gateway.AdminHandler{
-				AuthStore:            authStore,
-				JWTMgr:               jwtMgr,
-				URLStore:             store,
-				OIDCMgr:              oidcMgr,
+				AuthStore: authStore,
+				JWTMgr:    jwtMgr,
+				URLStore:  store,
+				OIDCMgr:   oidcMgr,
+				Mailer: mail.New(mail.Config{
+					Host:     conf.Mail.Host,
+					Port:     conf.Mail.Port,
+					Username: conf.Mail.Username,
+					Password: conf.Mail.Password,
+					From:     conf.Mail.From,
+				}),
+				AppBaseURL:           conf.AppBaseURL,
 				DisablePasswordLogin: conf.Auth.GetDisablePasswordLogin(),
 			},
 		}
@@ -200,6 +209,24 @@ func main() {
 			}
 		}()
 	}
+
+	// --- Periodic expiry-sweep for pending invitations (Phase 15.9) ---
+	go func() {
+		ticker := time.NewTicker(time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if n, err := authStore.SweepExpiredInvitations(ctx); err != nil {
+					log.Warn("Invitations", "expiry sweep failed", "error", err)
+				} else if n > 0 {
+					log.Info("Invitations", "expired invites swept", n)
+				}
+			}
+		}
+	}()
 
 	// --- Signal handling ---
 	sigCh := make(chan os.Signal, 1)
@@ -217,7 +244,7 @@ func main() {
 
 	// gRPC server stopped — shut down remaining services in order
 	log.Info("Draining services")
-	cancel()             // stop REST gateway HTTP server
+	cancel()            // stop REST gateway HTTP server
 	visitLogger.Close() // flush buffered visit writes
 	pgStore.Pool.Close()
 	log.Info("Shutdown complete")

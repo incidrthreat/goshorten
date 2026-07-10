@@ -53,6 +53,12 @@ All env vars have sensible defaults and work out of the box for local developmen
 | `GOSHORTEN_GATEWAY_ADDR` | `:8080` | REST gateway listen address |
 | `GOSHORTEN_BACKEND_URL` | `http://grpcbackend:8080` | Frontend → backend proxy URL |
 | `GOSHORTEN_GRPC_ADDR` | `grpcbackend:9000` | Frontend → gRPC backend address |
+| `GOSHORTEN_APP_BASE_URL` | *(empty)* | Public origin used to build workspace-invitation accept links (e.g. `https://links.example.com`) |
+| `GOSHORTEN_SMTP_HOST` | *(empty)* | SMTP host for invitation emails. When unset, invite links are logged and shown as copyable links in the UI instead |
+| `GOSHORTEN_SMTP_PORT` | `587` | SMTP port (`587` STARTTLS, `465` implicit TLS) |
+| `GOSHORTEN_SMTP_USERNAME` | *(empty)* | SMTP auth username |
+| `GOSHORTEN_SMTP_PASSWORD` | *(empty)* | SMTP auth password |
+| `GOSHORTEN_SMTP_FROM` | `no-reply@goshorten.local` | From address for outbound email |
 
 #### Setting Environment Variables
 
@@ -322,7 +328,7 @@ The following phases continue the existing roadmap. The ordering is intentional 
 - 14.9 Separate platform/operator admin (service owner) from workspace-level roles
 - 14.10 Add cross-tenant isolation integration tests (verify no workspace can read another's data)
 
-### [ ] Phase 15: Memberships, Roles & Invitations
+### [X] Phase 15: Memberships, Roles & Invitations
 
 [#--phase-15-memberships-roles--invitations](#--phase-15-memberships-roles--invitations)
 
