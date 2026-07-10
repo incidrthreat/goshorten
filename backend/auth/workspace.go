@@ -78,15 +78,17 @@ func (s *AuthStore) GetWorkspace(ctx context.Context, id int64) (*Workspace, err
 	return w, nil
 }
 
-// ListWorkspacesForUser returns the workspaces a user can access: ones they own
-// plus their default workspace (covers legacy users sharing the backfilled
-// "Default" workspace). Memberships (Phase 15) will broaden this.
+// ListWorkspacesForUser returns the workspaces a user can access via membership
+// (Phase 15), plus their owned workspaces and default workspace as safety nets
+// for any account that predates the memberships backfill.
 func (s *AuthStore) ListWorkspacesForUser(ctx context.Context, userID int64) ([]Workspace, error) {
 	rows, err := s.Pool.Query(ctx,
-		`SELECT `+workspaceColumns+`
+		`SELECT DISTINCT `+prefixColumns("w", workspaceColumns)+`
 		 FROM workspaces w
 		 WHERE w.owner_id = $1
 		    OR w.id = (SELECT default_workspace_id FROM users WHERE id = $1)
+		    OR EXISTS (SELECT 1 FROM memberships m
+		               WHERE m.workspace_id = w.id AND m.user_id = $1)
 		 ORDER BY w.created_at`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("list workspaces: %w", err)
@@ -105,8 +107,8 @@ func (s *AuthStore) ListWorkspacesForUser(ctx context.Context, userID int64) ([]
 }
 
 // UserCanAccessWorkspace reports whether a user may operate within a workspace.
-// Phase 14 is owner-only, with the user's default workspace allowed as a
-// transitional bridge for backfilled/legacy accounts.
+// Access is granted by an active membership (Phase 15), with ownership and the
+// user's default workspace accepted as transitional bridges for legacy accounts.
 func (s *AuthStore) UserCanAccessWorkspace(ctx context.Context, userID, workspaceID int64) (bool, error) {
 	if workspaceID <= 0 {
 		return false, nil
@@ -114,6 +116,9 @@ func (s *AuthStore) UserCanAccessWorkspace(ctx context.Context, userID, workspac
 	var ok bool
 	err := s.Pool.QueryRow(ctx,
 		`SELECT EXISTS (
+			SELECT 1 FROM memberships m
+			  WHERE m.workspace_id = $2 AND m.user_id = $1 AND m.status = 'active'
+			UNION
 			SELECT 1 FROM workspaces w WHERE w.id = $2 AND w.owner_id = $1
 			UNION
 			SELECT 1 FROM users u WHERE u.id = $1 AND u.default_workspace_id = $2
@@ -122,6 +127,40 @@ func (s *AuthStore) UserCanAccessWorkspace(ctx context.Context, userID, workspac
 		return false, fmt.Errorf("check workspace access: %w", err)
 	}
 	return ok, nil
+}
+
+// WorkspaceRole returns the caller's effective role within a workspace. It prefers
+// the membership role; if there is no membership row but the user owns the
+// workspace or it is their default (legacy bridge), it reports "owner"/"member"
+// respectively. Returns "" when the user has no access.
+func (s *AuthStore) WorkspaceRole(ctx context.Context, userID, workspaceID int64) (string, error) {
+	if workspaceID <= 0 {
+		return "", nil
+	}
+	m, err := s.GetMembership(ctx, userID, workspaceID)
+	if err != nil {
+		return "", err
+	}
+	if m != nil {
+		return m.Role, nil
+	}
+	// No membership row — fall back to legacy signals.
+	var role string
+	err = s.Pool.QueryRow(ctx,
+		`SELECT CASE
+		          WHEN w.owner_id = $1 THEN 'owner'
+		          WHEN u.default_workspace_id = $2 THEN 'member'
+		          ELSE ''
+		        END
+		 FROM workspaces w, users u
+		 WHERE w.id = $2 AND u.id = $1`, userID, workspaceID).Scan(&role)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", nil
+		}
+		return "", fmt.Errorf("workspace role: %w", err)
+	}
+	return role, nil
 }
 
 // DeleteWorkspace removes a workspace owned by ownerID. The owner's personal

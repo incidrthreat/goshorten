@@ -10,6 +10,7 @@ import {
   Menu,
   X,
   Users,
+  Users2,
   Moon,
   Sun,
   ShieldCheck,
@@ -29,6 +30,7 @@ const baseNavItems = [
   { to: '/', icon: Link2, label: 'URLs' },
   { to: '/create', icon: PlusCircle, label: 'Create' },
   { to: '/tags', icon: Tags, label: 'Tags' },
+  { to: '/members', icon: Users2, label: 'Members' },
   { to: '/api-keys', icon: Key, label: 'API Keys' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]

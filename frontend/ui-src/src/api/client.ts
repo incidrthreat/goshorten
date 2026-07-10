@@ -284,4 +284,89 @@ export const workspaces = {
     request<{ status: string }>(`/workspaces/${id}`, { method: 'DELETE' }),
 }
 
+// --- Members & Invitations (Phase 15) ---
+export interface Member {
+  userId: number
+  email: string
+  name: string
+  role: string
+  status: string
+  joinedAt: string
+}
+
+export interface Invitation {
+  id: number
+  email: string
+  role: string
+  status: string
+  invitedBy: string
+  expiresAt: string
+  createdAt: string
+  acceptUrl?: string
+}
+
+export interface MembersResponse {
+  members: Member[]
+  pendingInvites: Invitation[]
+  yourRole: string
+}
+
+export interface InvitePreview {
+  email: string
+  role: string
+  workspaceName: string
+  hasAccount: boolean
+  passwordLoginEnabled: boolean
+  expiresAt: string
+}
+
+export const members = {
+  list: (workspaceId: number) =>
+    request<MembersResponse>(`/workspaces/${workspaceId}/members`),
+  updateRole: (workspaceId: number, userId: number, role: string) =>
+    request<{ status: string }>(`/workspaces/${workspaceId}/members/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }),
+  remove: (workspaceId: number, userId: number) =>
+    request<{ status: string }>(`/workspaces/${workspaceId}/members/${userId}`, {
+      method: 'DELETE',
+    }),
+  transferOwnership: (workspaceId: number, newOwnerUserId: number) =>
+    request<{ status: string }>(`/workspaces/${workspaceId}/transfer-ownership`, {
+      method: 'POST',
+      body: JSON.stringify({ newOwnerUserId }),
+    }),
+}
+
+export const invitations = {
+  list: (workspaceId: number) =>
+    request<{ invitations: Invitation[] }>(`/workspaces/${workspaceId}/invitations`),
+  create: (workspaceId: number, email: string, role: string) =>
+    request<Invitation>(`/workspaces/${workspaceId}/invitations`, {
+      method: 'POST',
+      body: JSON.stringify({ email, role }),
+    }),
+  resend: (workspaceId: number, inviteId: number) =>
+    request<Invitation>(`/workspaces/${workspaceId}/invitations/${inviteId}/resend`, {
+      method: 'POST',
+    }),
+  revoke: (workspaceId: number, inviteId: number) =>
+    request<{ status: string }>(`/workspaces/${workspaceId}/invitations/${inviteId}`, {
+      method: 'DELETE',
+    }),
+  // Public/token-addressed accept flow.
+  preview: (token: string) => request<InvitePreview>(`/invitations/${token}`),
+  accept: (token: string, body?: { name?: string; password?: string }) =>
+    request<{
+      status: string
+      workspaceId: number
+      token?: string
+      user?: { id: number; email: string; name: string; role: string }
+    }>(`/invitations/${token}/accept`, {
+      method: 'POST',
+      body: JSON.stringify(body || {}),
+    }),
+}
+
 export { APIError }

@@ -12,6 +12,8 @@ import APIKeys from './pages/APIKeys'
 import SettingsPage from './pages/SettingsPage'
 import Preview from './pages/Preview'
 import Expired from './pages/Expired'
+import Members from './pages/Members'
+import AcceptInvite from './pages/AcceptInvite'
 import AdminUsers from './pages/admin/Users'
 import AdminOIDCProviders from './pages/admin/OIDCProviders'
 import OIDCCallback from './pages/OIDCCallback'
@@ -58,6 +60,15 @@ export default function App() {
     )
   }
 
+  // Invite acceptance is reachable whether or not the user is signed in.
+  if (location.pathname.startsWith('/invite/')) {
+    return (
+      <Routes>
+        <Route path="/invite/:token" element={<AcceptInvite />} />
+      </Routes>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
@@ -79,6 +90,7 @@ export default function App() {
         <Route path="/urls/:code/edit" element={<EditURL />} />
         <Route path="/tags" element={<Tags />} />
         <Route path="/api-keys" element={<APIKeys />} />
+        <Route path="/members" element={<Members user={user} />} />
         <Route
           path="/settings"
           element={

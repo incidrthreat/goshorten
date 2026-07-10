@@ -19,5 +19,13 @@
         "admin_password": "CHANGE_ME",
         "token_expiry_hours": 24
     },
+    "mail_conf": {
+        "host": "",
+        "port": 587,
+        "username": "",
+        "password": "",
+        "from": "no-reply@goshorten.local"
+    },
+    "app_base_url": "",
     "grpc_host": ":9000"
 }
