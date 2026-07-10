@@ -16,16 +16,17 @@ var log = hclog.Default()
 
 // User represents a user record.
 type User struct {
-	ID           int64
-	Email        string
-	Name         string
-	Role         string
-	PasswordHash *string
-	OIDCSubject  *string
-	OIDCIssuer   *string
-	IsActive     bool
-	CreatedAt    time.Time
-	Theme        string // "system", "light", or "dark"
+	ID                 int64
+	Email              string
+	Name               string
+	Role               string
+	PasswordHash       *string
+	OIDCSubject        *string
+	OIDCIssuer         *string
+	IsActive           bool
+	CreatedAt          time.Time
+	Theme              string // "system", "light", or "dark"
+	DefaultWorkspaceID *int64 // personal workspace; active-workspace fallback
 }
 
 // Session represents an active login session.
@@ -64,14 +65,15 @@ type UpdateOIDCProviderParams struct {
 
 // APIKey represents an API key record.
 type APIKey struct {
-	ID        int64
-	UserID    int64
-	KeyHash   string
-	Label     string
-	Scopes    string
-	CreatedAt time.Time
-	ExpiresAt *time.Time
-	Revoked   bool
+	ID          int64
+	UserID      int64
+	WorkspaceID int64 // tenant the key operates within
+	KeyHash     string
+	Label       string
+	Scopes      string
+	CreatedAt   time.Time
+	ExpiresAt   *time.Time
+	Revoked     bool
 }
 
 // AuthStore handles auth-related database operations.
@@ -86,12 +88,12 @@ func NewAuthStore(pool *pgxpool.Pool) *AuthStore {
 
 // --- User operations ---
 
-const userColumns = `id, email, COALESCE(name, ''), role, password_hash, oidc_subject, oidc_issuer, is_active, created_at, COALESCE(theme, 'system')`
+const userColumns = `id, email, COALESCE(name, ''), role, password_hash, oidc_subject, oidc_issuer, is_active, created_at, COALESCE(theme, 'system'), default_workspace_id`
 
 func scanUser(row interface{ Scan(...any) error }) (*User, error) {
 	u := &User{}
 	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.PasswordHash,
-		&u.OIDCSubject, &u.OIDCIssuer, &u.IsActive, &u.CreatedAt, &u.Theme)
+		&u.OIDCSubject, &u.OIDCIssuer, &u.IsActive, &u.CreatedAt, &u.Theme, &u.DefaultWorkspaceID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -131,15 +133,46 @@ func (s *AuthStore) GetUserByOIDC(ctx context.Context, issuer, subject string) (
 	return u, nil
 }
 
-// CreateUser inserts a new user.
+// CreateUser inserts a new user and auto-provisions a personal workspace so no
+// account is ever workspace-less (Phase 14.4). The user's default_workspace_id is
+// set to that workspace. Runs in a single transaction.
 func (s *AuthStore) CreateUser(ctx context.Context, email, name, role string, passwordHash *string, oidcIssuer, oidcSubject *string) (*User, error) {
-	u, err := scanUser(s.Pool.QueryRow(ctx,
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("create user: begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	u, err := scanUser(tx.QueryRow(ctx,
 		`INSERT INTO users (email, name, role, password_hash, oidc_issuer, oidc_subject)
 		 VALUES ($1, $2, $3, $4, $5, $6)
 		 RETURNING `+userColumns,
 		email, name, role, passwordHash, oidcIssuer, oidcSubject))
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
+	}
+
+	wsName := "Personal Workspace"
+	if name != "" {
+		wsName = name + "'s Workspace"
+	}
+	wsSlug := fmt.Sprintf("ws-%d", u.ID)
+
+	var wsID int64
+	if err := tx.QueryRow(ctx,
+		`INSERT INTO workspaces (name, slug, owner_id, plan) VALUES ($1, $2, $3, 'free') RETURNING id`,
+		wsName, wsSlug, u.ID).Scan(&wsID); err != nil {
+		return nil, fmt.Errorf("create personal workspace: %w", err)
+	}
+
+	if _, err := tx.Exec(ctx,
+		`UPDATE users SET default_workspace_id = $1 WHERE id = $2`, wsID, u.ID); err != nil {
+		return nil, fmt.Errorf("set default workspace: %w", err)
+	}
+	u.DefaultWorkspaceID = &wsID
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("create user: commit: %w", err)
 	}
 	return u, nil
 }
@@ -258,7 +291,7 @@ func (s *AuthStore) ListUsers(ctx context.Context, search string, page, pageSize
 	for rows.Next() {
 		var u User
 		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Role, &u.PasswordHash,
-			&u.OIDCSubject, &u.OIDCIssuer, &u.IsActive, &u.CreatedAt, &u.Theme); err != nil {
+			&u.OIDCSubject, &u.OIDCIssuer, &u.IsActive, &u.CreatedAt, &u.Theme, &u.DefaultWorkspaceID); err != nil {
 			return nil, 0, err
 		}
 		users = append(users, u)
@@ -426,9 +459,9 @@ func (s *AuthStore) BootstrapAdmin(ctx context.Context, email, password string) 
 
 // --- API Key operations ---
 
-// CreateAPIKey creates a new API key for a user.
+// CreateAPIKey creates a new API key for a user, bound to a workspace.
 // Returns (plaintext_key, *APIKey, error). The plaintext is shown once and never stored.
-func (s *AuthStore) CreateAPIKey(ctx context.Context, userID int64, label, scopes string) (string, *APIKey, error) {
+func (s *AuthStore) CreateAPIKey(ctx context.Context, userID, workspaceID int64, label, scopes string) (string, *APIKey, error) {
 	plaintext, hash, err := GenerateAPIKey()
 	if err != nil {
 		return "", nil, err
@@ -440,11 +473,11 @@ func (s *AuthStore) CreateAPIKey(ctx context.Context, userID int64, label, scope
 
 	k := &APIKey{}
 	err = s.Pool.QueryRow(ctx,
-		`INSERT INTO api_keys (user_id, key_hash, label, scopes)
-		 VALUES ($1, $2, $3, $4)
-		 RETURNING id, user_id, key_hash, label, scopes, created_at, expires_at, revoked`,
-		userID, hash, label, scopes,
-	).Scan(&k.ID, &k.UserID, &k.KeyHash, &k.Label, &k.Scopes, &k.CreatedAt, &k.ExpiresAt, &k.Revoked)
+		`INSERT INTO api_keys (user_id, workspace_id, key_hash, label, scopes)
+		 VALUES ($1, $2, $3, $4, $5)
+		 RETURNING id, user_id, COALESCE(workspace_id, 0), key_hash, label, scopes, created_at, expires_at, revoked`,
+		userID, workspaceID, hash, label, scopes,
+	).Scan(&k.ID, &k.UserID, &k.WorkspaceID, &k.KeyHash, &k.Label, &k.Scopes, &k.CreatedAt, &k.ExpiresAt, &k.Revoked)
 	if err != nil {
 		return "", nil, fmt.Errorf("create api key: %w", err)
 	}
@@ -458,9 +491,9 @@ func (s *AuthStore) ValidateAPIKey(ctx context.Context, plaintext string) (*User
 
 	k := &APIKey{}
 	err := s.Pool.QueryRow(ctx,
-		`SELECT id, user_id, key_hash, label, scopes, created_at, expires_at, revoked
+		`SELECT id, user_id, COALESCE(workspace_id, 0), key_hash, label, scopes, created_at, expires_at, revoked
 		 FROM api_keys WHERE key_hash = $1`, hash,
-	).Scan(&k.ID, &k.UserID, &k.KeyHash, &k.Label, &k.Scopes, &k.CreatedAt, &k.ExpiresAt, &k.Revoked)
+	).Scan(&k.ID, &k.UserID, &k.WorkspaceID, &k.KeyHash, &k.Label, &k.Scopes, &k.CreatedAt, &k.ExpiresAt, &k.Revoked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil, errors.New("invalid API key")
@@ -501,12 +534,13 @@ func (s *AuthStore) RevokeAPIKey(ctx context.Context, keyID, userID int64) error
 
 // RollAPIKey revokes the existing key and creates a new one with the same label and scopes.
 func (s *AuthStore) RollAPIKey(ctx context.Context, keyID, userID int64) (string, *APIKey, error) {
-	// Fetch existing key to preserve label and scopes
+	// Fetch existing key to preserve label, scopes, and workspace
 	var label, scopes string
+	var workspaceID int64
 	err := s.Pool.QueryRow(ctx,
-		`SELECT label, scopes FROM api_keys WHERE id = $1 AND user_id = $2 AND revoked = FALSE`,
+		`SELECT label, scopes, COALESCE(workspace_id, 0) FROM api_keys WHERE id = $1 AND user_id = $2 AND revoked = FALSE`,
 		keyID, userID,
-	).Scan(&label, &scopes)
+	).Scan(&label, &scopes, &workspaceID)
 	if err != nil {
 		return "", nil, errors.New("API key not found or already revoked")
 	}
@@ -517,14 +551,14 @@ func (s *AuthStore) RollAPIKey(ctx context.Context, keyID, userID int64) (string
 		return "", nil, fmt.Errorf("roll api key (revoke): %w", err)
 	}
 
-	// Create replacement with same label and scopes
-	return s.CreateAPIKey(ctx, userID, label, scopes)
+	// Create replacement with same label, scopes, and workspace
+	return s.CreateAPIKey(ctx, userID, workspaceID, label, scopes)
 }
 
 // ListAPIKeys returns all API keys for a user.
 func (s *AuthStore) ListAPIKeys(ctx context.Context, userID int64) ([]APIKey, error) {
 	rows, err := s.Pool.Query(ctx,
-		`SELECT id, user_id, key_hash, label, scopes, created_at, expires_at, revoked
+		`SELECT id, user_id, COALESCE(workspace_id, 0), key_hash, label, scopes, created_at, expires_at, revoked
 		 FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("list api keys: %w", err)
@@ -534,7 +568,7 @@ func (s *AuthStore) ListAPIKeys(ctx context.Context, userID int64) ([]APIKey, er
 	var keys []APIKey
 	for rows.Next() {
 		var k APIKey
-		if err := rows.Scan(&k.ID, &k.UserID, &k.KeyHash, &k.Label, &k.Scopes, &k.CreatedAt, &k.ExpiresAt, &k.Revoked); err != nil {
+		if err := rows.Scan(&k.ID, &k.UserID, &k.WorkspaceID, &k.KeyHash, &k.Label, &k.Scopes, &k.CreatedAt, &k.ExpiresAt, &k.Revoked); err != nil {
 			return nil, err
 		}
 		keys = append(keys, k)

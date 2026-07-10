@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useState } from 'react'
+import WorkspaceSwitcher from './WorkspaceSwitcher'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -131,6 +132,7 @@ export default function Layout({ children, user, onLogout, theme, onSetTheme }: 
           <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate flex-1">
             {allNav.find((n) => n.to === location.pathname)?.label || 'GoShorten'}
           </h1>
+          <WorkspaceSwitcher />
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

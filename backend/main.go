@@ -134,6 +134,14 @@ func main() {
 		}
 	}
 
+	// Resolve the instance default workspace for anonymous/legacy writes (Phase 14).
+	defaultWS, err := authStore.EnsureDefaultWorkspace(context.Background())
+	if err != nil {
+		log.Warn("Workspace", "Failed to resolve default workspace", err)
+	}
+	store.SetDefaultWorkspace(defaultWS)
+	log.Info("Workspace", "Default workspace id", defaultWS)
+
 	// --- Auth interceptor ---
 	interceptor := auth.NewAuthInterceptor(jwtMgr, authStore)
 

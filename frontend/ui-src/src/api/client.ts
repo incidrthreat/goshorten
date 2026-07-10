@@ -15,6 +15,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
+  // Active workspace scope (Phase 14). Sent on every request so both the
+  // grpc-gateway and the self-service endpoints resolve the same tenant.
+  const workspaceId = localStorage.getItem('workspaceId')
+  if (workspaceId) {
+    headers['X-Workspace-Id'] = workspaceId
+  }
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
 
@@ -249,6 +255,33 @@ export const apiKeys = {
     request<{ plaintextKey: string; key: Record<string, unknown> }>(`/auth/api-keys/${keyId}/roll`, {
       method: 'POST',
     }),
+}
+
+// --- Workspaces (Phase 14) ---
+export interface Workspace {
+  id: number
+  name: string
+  slug: string
+  plan: string
+  isOwner: boolean
+  createdAt: string
+}
+
+export const workspaces = {
+  list: () =>
+    request<{ workspaces: Workspace[]; activeWorkspaceId: number }>('/workspaces'),
+  create: (name: string) =>
+    request<Workspace>('/workspaces', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+  switch: (workspaceId: number) =>
+    request<{ activeWorkspaceId: number }>('/workspaces/switch', {
+      method: 'POST',
+      body: JSON.stringify({ workspaceId }),
+    }),
+  delete: (id: number) =>
+    request<{ status: string }>(`/workspaces/${id}`, { method: 'DELETE' }),
 }
 
 export { APIError }

@@ -307,7 +307,7 @@ Here's the full roadmap broken into 10 phases. The ordering is intentional — e
 
 The following phases continue the existing roadmap. The ordering is intentional — each phase builds on the one before it. The tenant boundary (Phase 14) comes first because billing, custom domains, memberships, and feature gating all depend on it.
 
-### [ ] Phase 14: Multi-Tenancy Foundation (Workspaces & Tenant Isolation)
+### [X] Phase 14: Multi-Tenancy Foundation (Workspaces & Tenant Isolation)
 
 [#--phase-14-multi-tenancy-foundation-workspaces--tenant-isolation](#--phase-14-multi-tenancy-foundation-workspaces--tenant-isolation)
 

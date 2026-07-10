@@ -19,6 +19,7 @@ type URLRecord struct {
 	TotalClicks     int64
 	CreatedByUserID *int64
 	CreatedByEmail  string
+	WorkspaceID     int64 // owning tenant workspace
 }
 
 // URLCreateParams holds the input for creating a short URL.
@@ -33,11 +34,13 @@ type URLCreateParams struct {
 	Domain       *string
 	Tags         []string
 	UserID       *int64   // owner, nil = anonymous/legacy
+	WorkspaceID  int64    // owning tenant workspace (0 = use store default)
 }
 
 // URLUpdateParams holds the input for updating a short URL.
 type URLUpdateParams struct {
 	Code           string
+	WorkspaceID    int64    // tenant scope; mutation only affects rows in this workspace
 	LongURL        *string  // nil = no change
 	Title          *string  // nil = no change
 	TTL            *int64   // nil = no change, -1 = never expire
@@ -51,14 +54,15 @@ type URLUpdateParams struct {
 
 // URLListParams holds the input for listing/filtering short URLs.
 type URLListParams struct {
-	Page     int32
-	PageSize int32
-	Search   string
-	Tag      string
-	Domain   string
-	OrderBy  string // "created_at", "clicks", "code"
-	OrderDir string // "asc", "desc"
-	UserID   *int64 // nil = all (admin), non-nil = owned by this user
+	Page        int32
+	PageSize    int32
+	Search      string
+	Tag         string
+	Domain      string
+	OrderBy     string // "created_at", "clicks", "code"
+	OrderDir    string // "asc", "desc"
+	UserID      *int64 // nil = all in workspace, non-nil = owned by this user
+	WorkspaceID int64  // tenant scope; 0 = operator/global (no workspace filter)
 }
 
 // URLListResult holds a paginated list of URL records.
@@ -80,10 +84,13 @@ type URLStore interface {
 	Create(params URLCreateParams) (*URLRecord, error)
 	Get(code string) (*URLRecord, error)
 	Update(params URLUpdateParams) (*URLRecord, error)
-	Delete(code string) error
+	Delete(workspaceID int64, code string) error
 	List(params URLListParams) (*URLListResult, error)
 
 	// Phase 5: visit logging
 	SetVisitLogger(vl *VisitLogger)
 	RecordVisit(code string, ipAddress, userAgent, referer string)
+
+	// Phase 14: tenant default for anonymous/legacy writes.
+	SetDefaultWorkspace(id int64)
 }
